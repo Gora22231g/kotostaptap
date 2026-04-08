@@ -12,7 +12,7 @@
         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: none; background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; transition: background-color 2s ease; }
         
         #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s ease-in-out; animation: auraExplosion 2.5s infinite cubic-bezier(0.15, 0.5, 0.3, 1); pointer-events: none; }
-        #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; cursor: pointer; }
+        #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; }
         #score { font-size: 60px; font-weight: 900; color: #ffcc00; margin: 0; text-shadow: 0 0 40px rgba(255, 204, 0, 0.4); z-index: 10; margin-top: -40px; }
         
         #cat-wrapper { position: relative; z-index: 50; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
@@ -30,33 +30,32 @@
         
         .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; }
+
         .close-btn { background: #ff4444; color: white; border: none; padding: 12px 45px; border-radius: 12px; font-weight: bold; margin-top: 15px; text-transform: uppercase; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
-        @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
         
         .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; animation: plusOne 0.6s ease-out forwards; }
         @keyframes plusOne { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(1.4); opacity: 0; } }
 
-        /* Экраны защиты */
-        #warn-screen, #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #warn-screen { background: rgba(255, 100, 0, 0.95); color: white; }
-        #ban-screen { background: #000; color: #ff4444; border: 5px solid #ff4444; }
+        /* Экраны блокировки */
+        #warn-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 166, 0, 0.95); color: black; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; border: 5px solid #ff4444; }
     </style>
 </head>
 <body>
 
     <div id="warn-screen">
-        <h1 style="font-size: 50px;">⚠️ ВНИМАНИЕ</h1>
-        <p id="warn-text" style="font-size: 24px; font-weight: bold;"></p>
+        <h1 style="font-size: 50px;">⚠️ ПРЕДУПРЕЖДЕНИЕ</h1>
+        <p id="warn-text" style="font-size: 20px; font-weight: bold;"></p>
         <p>Не используй автокликер!</p>
     </div>
 
     <div id="ban-screen">
         <h1 style="font-size: 60px;">🚫 БАН</h1>
-        <p style="font-size: 20px;">Доступ ограничен администрацией или системой защиты.</p>
-        <h2 id="ban-timer" style="font-size: 32px; color: white;"></h2>
+        <p style="font-size: 24px;">Ты заблокирован за читы на 1 час.</p>
+        <p id="ban-timer" style="font-size: 30px; font-weight: 900; color: white;"></p>
     </div>
 
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
@@ -64,7 +63,9 @@
     <div id="aura-bg"></div>
     <h1 id="score">0</h1>
 
-    <div id="cat-wrapper"><img id="cat-image" src="image_0.png"></div>
+    <div id="cat-wrapper">
+        <img id="cat-image" src="image_0.png">
+    </div>
 
     <div id="settings-btn" class="side-btn" onclick="toggleMenu('settings-menu', true)">⚙️</div>
     <div id="shop-btn" class="side-btn" onclick="toggleMenu('shop-menu', true)"><img src="shop_new.png"></div>
@@ -87,7 +88,6 @@
     </div>
 
     <script>
-        const ADMIN_ID = 5242142630;
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
@@ -103,16 +103,20 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const user = tg.initDataUnsafe?.user || { id: 0 };
+        const user = tg.initDataUnsafe?.user;
         const userRef = database.ref('users/' + user.id);
 
         let score = 0, isCookieMode = false, musicActive = false, ownedSkins = { skin0: true }, currentSkinId = 'skin0';
+        
+        // Анти-кликер
         let clickHistory = [];
-        let warnCount = 0, banUntil = 0;
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const LIMIT = isMobile ? 15 : 6;
+        let warnCount = 0;
+        let isLocalBlocked = false;
+        let banUntil = 0;
 
-        // Слушатель базы данных
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const LIMIT = isMobile ? 15 : 6; 
+
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -124,7 +128,7 @@
                 warnCount = data.warnCount || 0;
                 banUntil = data.banUntil || 0;
                 
-                checkBan();
+                checkBanStatus();
                 updateVisuals();
                 renderShop();
                 renderSettings();
@@ -133,59 +137,29 @@
             }
         });
 
-        function checkBan() {
+        function checkBanStatus() {
             const now = Date.now();
-            const screen = document.getElementById('ban-screen');
             if (banUntil > now) {
-                screen.style.display = 'flex';
-                const diff = banUntil - now;
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s = Math.floor((diff % 60000) / 1000);
-                document.getElementById('ban-timer').innerText = `Осталось: ${h}ч ${m}м ${s}с`;
-            } else {
-                screen.style.display = 'none';
+                document.getElementById('ban-screen').style.display = 'flex';
+                updateBanTimer();
+                const timerInt = setInterval(() => {
+                    const timeLeft = banUntil - Date.now();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInt);
+                        userRef.update({ banUntil: 0, warnCount: 0 });
+                        document.getElementById('ban-screen').style.display = 'none';
+                    } else {
+                        updateBanTimer();
+                    }
+                }, 1000);
             }
         }
 
-        function handleTap(x, y) {
-            if (banUntil > Date.now() || document.querySelector('.overlay-menu.open')) return;
-
-            const now = Date.now();
-            clickHistory.push(now);
-            clickHistory = clickHistory.filter(t => now - t < 1000);
-
-            if (clickHistory.length > LIMIT) {
-                warnCount++;
-                if (warnCount >= 4) {
-                    // Бан на час при автоклике
-                    userRef.update({ banUntil: Date.now() + 3600000, warnCount: 0 });
-                } else {
-                    userRef.update({ warnCount: warnCount });
-                    document.getElementById('warn-text').innerText = `Предупреждение ${warnCount}/3`;
-                    document.getElementById('warn-screen').style.display = 'flex';
-                    tg.HapticFeedback.notificationOccurred('warning');
-                    setTimeout(() => {
-                        document.getElementById('warn-screen').style.display = 'none';
-                        clickHistory = [];
-                    }, 2500);
-                }
-                return;
-            }
-
-            const plus = (currentSkinId === 'skin1') ? 2 : 1;
-            score += plus;
-            updateVisuals();
-            userRef.update({ score: score });
-            
-            const img = document.getElementById('cat-image');
-            img.classList.remove('tapped');
-            void img.offsetWidth;
-            img.classList.add('tapped');
-            
-            if (musicActive) document.getElementById('bg-music').play().catch(()=>{});
-            tg.HapticFeedback.impactOccurred('light');
-            spawnPlusOne(x, y, plus);
+        function updateBanTimer() {
+            const diff = banUntil - Date.now();
+            const mins = Math.floor(diff / 1000 / 60);
+            const secs = Math.floor((diff / 1000) % 60);
+            document.getElementById('ban-timer').innerText = `Осталось: ${mins}м ${secs}с`;
         }
 
         function updateVisuals() {
@@ -194,33 +168,62 @@
             document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
             document.getElementById('aura-bg').style.background = `radial-gradient(circle at center bottom, ${accentColor} 0%, rgba(0, 0, 0, 0) 80%)`;
-            if (score > 0 && score % 5000 === 0) document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 25%, 8%)`;
+            
+            if (score > 0 && score % 5000 === 0) {
+                document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 25%, 8%)`;
+            }
         }
 
-        // Скрытая консоль админа (5 тапов по заголовку)
-        let adminClicks = 0;
-        document.getElementById('top-header').onclick = () => {
-            if (user.id !== ADMIN_ID) return;
-            adminClicks++;
-            if (adminClicks >= 5) {
-                adminClicks = 0;
-                const cmd = prompt("Консоль: /ban [id] [время] или /unban [id]");
-                if (cmd) {
-                    const parts = cmd.split(' ');
-                    if (parts[0] === '/ban') {
-                        const targetRef = database.ref('users/' + parts[1]);
-                        const timeStr = parts[2];
-                        let ms = 3600000;
-                        if (timeStr.includes('м')) ms = parseInt(timeStr) * 60000;
-                        if (timeStr.includes('ч')) ms = parseInt(timeStr) * 3600000;
-                        if (timeStr.includes('д')) ms = parseInt(timeStr) * 86400000;
-                        targetRef.update({ banUntil: Date.now() + ms, warnCount: 0 });
-                    } else if (parts[0] === '/unban') {
-                        database.ref('users/' + parts[1]).update({ banUntil: 0, warnCount: 0 });
-                    }
-                }
+        function handleTap(x, y) {
+            if (isLocalBlocked || banUntil > Date.now() || document.querySelector('.overlay-menu.open')) return;
+
+            const now = Date.now();
+            clickHistory.push(now);
+            clickHistory = clickHistory.filter(t => now - t < 1000);
+
+            if (clickHistory.length > LIMIT) {
+                processWarning();
+                return;
             }
-        };
+
+            const plus = (currentSkinId === 'skin1') ? 2 : 1;
+            score += plus;
+            updateVisuals();
+            userRef.update({ score: score });
+            
+            const tapper = document.getElementById('cat-wrapper');
+            tapper.classList.remove('tapped');
+            void tapper.offsetWidth;
+            tapper.classList.add('tapped');
+            
+            if (musicActive) document.getElementById('bg-music').play().catch(()=>{});
+            tg.HapticFeedback.impactOccurred('light');
+            spawnPlusOne(x, y, plus);
+        }
+
+        function processWarning() {
+            isLocalBlocked = true;
+            warnCount++;
+            
+            if (warnCount >= 4) {
+                // БАН НА ЧАС
+                const hourInMs = 3600000;
+                banUntil = Date.now() + hourInMs;
+                userRef.update({ banUntil: banUntil, warnCount: 0 });
+            } else {
+                // ПРОСТО ПРЕДУПРЕЖДЕНИЕ
+                userRef.update({ warnCount: warnCount });
+                document.getElementById('warn-text').innerText = `Это твое предупреждение: ${warnCount}/3`;
+                document.getElementById('warn-screen').style.display = 'flex';
+                tg.HapticFeedback.notificationOccurred('warning');
+                
+                setTimeout(() => {
+                    document.getElementById('warn-screen').style.display = 'none';
+                    isLocalBlocked = false;
+                    clickHistory = [];
+                }, 3000);
+            }
+        }
 
         function spawnPlusOne(x, y, val) {
             const el = document.createElement('div');
@@ -269,7 +272,9 @@
             }
         }, { passive: false });
 
-        document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
+        document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => {
+            handleTap(e.clientX, e.clientY);
+        });
     </script>
 </body>
 </html>
