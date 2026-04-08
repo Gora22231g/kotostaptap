@@ -11,31 +11,40 @@
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: none; background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; transition: background-color 2s ease; }
         
-        #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 2s; animation: auraExplosion 2.5s infinite; pointer-events: none; }
+        #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s; animation: auraExplosion 2.5s infinite; pointer-events: none; }
         #score { font-size: 60px; font-weight: 900; color: #ffcc00; z-index: 10; margin-top: -40px; text-shadow: 0 0 30px rgba(255, 204, 0, 0.4); }
         
         #cat-wrapper { position: relative; z-index: 50; width: 80vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        #cat-image { width: 90%; height: auto; pointer-events: none; }
+        #cat-image { width: 90%; height: auto; pointer-events: none; transition: 0.2s; }
 
         .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; }
-        .side-btn img { width: 100%; border-radius: 15px; }
+        .side-btn img { width: 100%; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        .overlay-menu { position: fixed; bottom: -110%; left: 0; width: 100%; height: 70vh; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); border-top: 3px solid #ffcc00; z-index: 200; transition: 0.4s; padding: 20px; text-align: center; border-radius: 30px 30px 0 0; }
+        .overlay-menu { position: fixed; bottom: -110%; left: 0; width: 100%; height: 70vh; background: rgba(10,10,10,0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; z-index: 200; transition: 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 25px; text-align: center; border-radius: 30px 30px 0 0; }
         .overlay-menu.open { bottom: 0; }
         
         #warn-screen, #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #warn-screen { background: rgba(255, 100, 0, 0.95); color: white; }
+        #warn-screen { background: rgba(255, 120, 0, 0.95); color: white; }
         #ban-screen { background: #000; color: #ff4444; border: 5px solid #ff4444; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
-        @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.9); } 100% { transform: scale(1); } }
-        @keyframes auraExplosion { 0% { opacity: 0.4; } 50% { opacity: 0.7; } 100% { opacity: 0.4; } }
+        @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.85); } 100% { transform: scale(1); } }
+        @keyframes auraExplosion { 0% { opacity: 0.4; transform: scale(0.95); } 50% { opacity: 0.6; transform: scale(1.05); } 100% { opacity: 0.4; transform: scale(0.95); } }
     </style>
 </head>
 <body>
 
-    <div id="warn-screen"><h1>⚠️ ПРЕДУПРЕЖДЕНИЕ</h1><p id="warn-text" style="font-size: 24px;"></p></div>
-    <div id="ban-screen"><h1>🚫 ДОСТУП ОГРАНИЧЕН</h1><p>Вы заблокированы администратором или системой.</p><h2 id="ban-timer"></h2></div>
+    <div id="warn-screen">
+        <h1 style="font-size: 50px;">⚠️ ВНИМАНИЕ</h1>
+        <p id="warn-text" style="font-size: 24px; font-weight: bold;"></p>
+        <p>Сбавь скорость, иначе получишь бан!</p>
+    </div>
+
+    <div id="ban-screen">
+        <h1 style="font-size: 60px;">🚫 БАН</h1>
+        <p style="font-size: 20px;">Вы были заблокированы за использование автокликера или администратором.</p>
+        <h2 id="ban-timer" style="font-size: 30px; color: white;"></h2>
+    </div>
 
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
     <div id="score">0</div>
@@ -47,7 +56,6 @@
     <div style="right:20px;" class="side-btn" onclick="toggleMenu('skin-menu', true)"><img src="skinshop.png"></div>
 
     <script>
-        const ADMIN_ID = 5242142630;
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
@@ -68,7 +76,7 @@
 
         let score = 0, warnCount = 0, banUntil = 0, clickHistory = [];
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const LIMIT = isMobile ? 15 : 6;
+        const LIMIT = isMobile ? 15 : 6; 
 
         userRef.on('value', (snap) => {
             const data = snap.val();
@@ -78,6 +86,11 @@
                 banUntil = data.banUntil || 0;
                 checkBan();
                 document.getElementById('score').innerText = score.toLocaleString();
+                
+                // Эффект смены фона
+                if (score > 0 && score % 5000 === 0) {
+                    document.body.style.backgroundColor = `hsl(${Math.random()*360}, 30%, 10%)`;
+                }
             } else {
                 userRef.set({ score: 0, warnCount: 0, banUntil: 0 });
             }
@@ -121,7 +134,11 @@
 
             score++;
             userRef.update({ score: score });
-            if (score % 5000 === 0) document.body.style.backgroundColor = `hsl(${Math.random()*360}, 20%, 10%)`;
+            
+            const img = document.getElementById('cat-image');
+            img.classList.remove('tapped');
+            void img.offsetWidth;
+            img.classList.add('tapped');
             
             tg.HapticFeedback.impactOccurred('light');
         }
@@ -129,7 +146,8 @@
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleTap(e.touches[0].clientX, e.touches[0].clientY);
-        });
+        }, { passive: false });
+
         document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
         function toggleMenu(id, open) { document.getElementById(id).classList.toggle('open', open); }
     </script>
