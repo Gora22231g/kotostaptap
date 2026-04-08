@@ -26,17 +26,18 @@
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
 
-        .overlay-menu { position: fixed; bottom: -100%; left: 0; width: 100%; height: 75vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; border-top-left-radius: 30px; border-top-right-radius: 30px; z-index: 200; transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 30px; text-align: center; overflow-y: auto; }
+        .overlay-menu { position: fixed; bottom: -100%; left: 0; width: 100%; height: 75vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; border-top-left-radius: 30px; border-top-right-radius: 30px; z-index: 200; transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 30px; text-align: center; }
         .overlay-menu.open { bottom: 0; }
         .overlay-menu h2 { font-size: 26px; color: #ffcc00; margin-bottom: 25px; text-transform: uppercase; }
 
-        .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
+        .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .option-row:active { transform: scale(0.98); background: #252525; }
+        .option-row.active { border-color: #ffcc00; background: #332b00; }
         
-        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; }
-        .buy-btn.owned { background: #44ff44; }
-        .buy-btn.active { background: #0082ff; color: white; }
+        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; pointer-events: none; }
+        .option-row:active .buy-btn { transform: scale(0.95); }
 
-        .close-btn { background: #ff4444; color: white; border: none; padding: 12px 45px; border-radius: 12px; font-weight: bold; margin-top: 15px; text-transform: uppercase; }
+        .close-btn { background: #ff4444; color: white; border: none; padding: 12px 45px; border-radius: 12px; font-weight: bold; margin-top: 15px; text-transform: uppercase; cursor: pointer; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
@@ -69,30 +70,31 @@
         <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
             <span style="color: #ffcc00;">БАЛАНС:</span> <span class="current-balance">0</span>
         </div>
-
-        <div class="option-row">
+        <div class="option-row" onclick="buyOrSelect('skin0')">
             <div style="display:flex; align-items:center;"><img src="image_0.png" width="40" style="margin-right:10px;"> Дефолт</div>
-            <button id="btn-skin0" class="buy-btn active" onclick="selectSkin('image_0.png', 'skin0')">ВЫБРАНО</button>
+            <div id="btn-skin0" class="buy-btn">ВЫБРАНО</div>
         </div>
-
-        <div class="option-row">
+        <div class="option-row" onclick="buyOrSelect('skin1')">
             <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
-            <button id="btn-skin1" class="buy-btn" onclick="buyOrSelect('skin1')">1,000</button>
+            <div id="btn-skin1" class="buy-btn">1,000</div>
         </div>
-
         <button class="close-btn" onclick="toggleMenu('skin-shop-menu', false)">ЗАКРЫТЬ</button>
     </div>
 
     <div id="shop-menu" class="overlay-menu">
         <h2>Улучшения</h2>
-        <div class="option-row">В разработке...</div>
+        <div class="option-row">Скоро добавление...</div>
         <button class="close-btn" onclick="toggleMenu('shop-menu', false)">ЗАКРЫТЬ</button>
     </div>
 
     <div id="settings-menu" class="overlay-menu">
         <h2>Настройки</h2>
-        <div id="music-opt" class="option-row" onclick="toggleMusic()">🎵 Музыка: ВЫКЛ</div>
-        <div id="name-opt" class="option-row" onclick="toggleCurrency()">🔄 Валюта: Котость</div>
+        <div id="music-opt" class="option-row" onclick="toggleMusic()">
+            <span>🎵 Музыка</span> <span id="music-status">ВЫКЛ</span>
+        </div>
+        <div id="name-opt" class="option-row" onclick="toggleCurrency()">
+            <span>🔄 Валюта</span> <span id="currency-status">Котость</span>
+        </div>
         <button class="close-btn" onclick="toggleMenu('settings-menu', false)">ЗАКРЫТЬ</button>
     </div>
 
@@ -120,7 +122,6 @@
         let score = 0;
         let isCookieMode = false;
         let musicActive = false;
-        let activeSkin = 'image_0.png';
         let ownedSkins = { skin0: true };
         let currentSkinId = 'skin0';
 
@@ -132,10 +133,9 @@
                 musicActive = data.musicOn || false;
                 ownedSkins = data.ownedSkins || { skin0: true };
                 currentSkinId = data.currentSkinId || 'skin0';
-                activeSkin = currentSkinId === 'skin1' ? 'skin1.png' : 'image_0.png';
-                
                 updateVisuals();
                 renderShop();
+                renderSettings();
             } else {
                 userRef.set({ score: 0, isCookie: false, musicOn: false, ownedSkins: { skin0: true }, currentSkinId: 'skin0' });
             }
@@ -144,63 +144,68 @@
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.querySelectorAll('.current-balance').forEach(b => b.innerText = score.toLocaleString());
-            document.getElementById('cat-image').src = activeSkin;
+            document.getElementById('cat-image').src = (currentSkinId === 'skin1') ? 'skin1.png' : 'image_0.png';
+            document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
             
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
             document.getElementById('aura-bg').style.background = `radial-gradient(circle at center bottom, ${accentColor} 0%, rgba(0, 0, 0, 0) 80%)`;
             document.getElementById('cat-image').style.filter = `drop-shadow(0 0 35px ${accentColor})`;
         }
 
+        function renderSettings() {
+            document.getElementById('music-status').innerText = musicActive ? "ВКЛ" : "ВЫКЛ";
+            document.getElementById('music-opt').classList.toggle('active', musicActive);
+            document.getElementById('currency-status').innerText = isCookieMode ? "Куки" : "Котость";
+            document.getElementById('name-opt').classList.toggle('active', isCookieMode);
+        }
+
         function renderShop() {
-            const s1Btn = document.getElementById('btn-skin1');
+            const s1 = document.getElementById('btn-skin1');
+            const s0 = document.getElementById('btn-skin0');
+            
             if (ownedSkins.skin1) {
-                if (currentSkinId === 'skin1') {
-                    s1Btn.innerText = "ВЫБРАНО";
-                    s1Btn.className = "buy-btn active";
-                } else {
-                    s1Btn.innerText = "ВЫБРАТЬ";
-                    s1Btn.className = "buy-btn owned";
-                }
+                s1.innerText = (currentSkinId === 'skin1') ? "ВЫБРАНО" : "ВЫБРАТЬ";
+                s1.style.background = (currentSkinId === 'skin1') ? "#0082ff" : "#44ff44";
             }
             
-            const s0Btn = document.getElementById('btn-skin0');
-            if (currentSkinId === 'skin0') {
-                s0Btn.innerText = "ВЫБРАНО";
-                s0Btn.className = "buy-btn active";
-            } else {
-                s0Btn.innerText = "ВЫБРАТЬ";
-                s0Btn.className = "buy-btn owned";
-            }
+            s0.innerText = (currentSkinId === 'skin0') ? "ВЫБРАНО" : "ВЫБРАТЬ";
+            s0.style.background = (currentSkinId === 'skin0') ? "#0082ff" : "#44ff44";
         }
 
         function buyOrSelect(skinId) {
             if (ownedSkins[skinId]) {
-                selectSkin(skinId === 'skin1' ? 'skin1.png' : 'image_0.png', skinId);
+                currentSkinId = skinId;
+                userRef.update({ currentSkinId: skinId });
+                tg.HapticFeedback.impactOccurred('medium');
             } else {
                 if (score >= 1000) {
                     score -= 1000;
                     ownedSkins[skinId] = true;
-                    userRef.update({ score: score, ownedSkins: ownedSkins });
+                    userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
-                    alert("Недостаточно котости!");
                 }
             }
         }
 
-        function selectSkin(img, id) {
-            activeSkin = img;
-            currentSkinId = id;
-            userRef.update({ currentSkinId: id });
-            tg.HapticFeedback.impactOccurred('medium');
+        function toggleMusic() {
+            musicActive = !musicActive;
+            const audio = document.getElementById('bg-music');
+            if (musicActive) audio.play().catch(()=>{}); else audio.pause();
+            userRef.update({ musicOn: musicActive });
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function toggleCurrency() {
+            isCookieMode = !isCookieMode;
+            userRef.update({ isCookie: isCookieMode });
+            tg.HapticFeedback.impactOccurred('light');
         }
 
         function handleTap(x, y) {
-            // Если надет скин1, даем +2, иначе +1
             const plus = (currentSkinId === 'skin1') ? 2 : 1;
             score += plus;
-            
             updateVisuals();
             userRef.update({ score: score });
             
@@ -223,18 +228,17 @@
             setTimeout(() => el.remove(), 600);
         }
 
-        // Слушатели тапов
+        function toggleMenu(id, open) {
+            document.getElementById(id).classList.toggle('open', open);
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
             }
         }, { passive: false });
-
-        // Функции меню (Остальные без изменений)
-        function toggleMenu(id, open) { document.getElementById(id).classList.toggle('open', open); tg.HapticFeedback.impactOccurred('medium'); }
-        function toggleMusic() { musicActive = !musicActive; userRef.update({ musicOn: musicActive }); }
-        function toggleCurrency() { isCookieMode = !isCookieMode; userRef.update({ isCookie: isCookieMode }); }
     </script>
 </body>
 </html>
