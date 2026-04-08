@@ -35,27 +35,19 @@
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
+        @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
         
         .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; animation: plusOne 0.6s ease-out forwards; }
         @keyframes plusOne { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(1.4); opacity: 0; } }
 
-        /* Экраны блокировки */
-        #warn-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 166, 0, 0.95); color: black; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff4444; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; border: 5px solid #ff4444; }
+        #cheat-warn { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.95); color: white; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="warn-screen">
-        <h1 style="font-size: 50px;">⚠️ ПРЕДУПРЕЖДЕНИЕ</h1>
-        <p id="warn-text" style="font-size: 20px; font-weight: bold;"></p>
-        <p>Не используй автокликер!</p>
-    </div>
-
-    <div id="ban-screen">
-        <h1 style="font-size: 60px;">🚫 БАН</h1>
-        <p style="font-size: 24px;">Ты заблокирован за читы на 1 час.</p>
-        <p id="ban-timer" style="font-size: 30px; font-weight: 900; color: white;"></p>
+    <div id="cheat-warn">
+        <h1 style="font-size: 60px;">⛔ СТОП!</h1>
+        <p style="font-size: 20px;">Превышена скорость кликов.<br>Подожди пару секунд...</p>
     </div>
 
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
@@ -73,8 +65,12 @@
 
     <div id="skin-shop-menu" class="overlay-menu">
         <h2>Скины</h2>
-        <div class="option-row" onclick="buyOrSelect('skin0')"><span>Дефолт</span><div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div></div>
-        <div class="option-row" onclick="buyOrSelect('skin1')"><span>Элитный (+2)</span><div id="btn-skin1" class="buy-btn">1,000</div></div>
+        <div class="option-row" onclick="buyOrSelect('skin0')">
+            <span>Дефолт</span><div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div>
+        </div>
+        <div class="option-row" onclick="buyOrSelect('skin1')">
+            <span>Элитный (+2)</span><div id="btn-skin1" class="buy-btn">1,000</div>
+        </div>
         <button class="close-btn" onclick="toggleMenu('skin-shop-menu', false)">ЗАКРЫТЬ</button>
     </div>
 
@@ -108,14 +104,11 @@
 
         let score = 0, isCookieMode = false, musicActive = false, ownedSkins = { skin0: true }, currentSkinId = 'skin0';
         
-        // Анти-кликер
+        // Анти-кликер данные
         let clickHistory = [];
-        let warnCount = 0;
-        let isLocalBlocked = false;
-        let banUntil = 0;
-
+        let isBlocked = false;
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const LIMIT = isMobile ? 15 : 6; 
+        const LIMIT = isMobile ? 15 : 6; // Твои лимиты
 
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -125,64 +118,44 @@
                 musicActive = data.musicOn || false;
                 ownedSkins = data.ownedSkins || { skin0: true };
                 currentSkinId = data.currentSkinId || 'skin0';
-                warnCount = data.warnCount || 0;
-                banUntil = data.banUntil || 0;
-                
-                checkBanStatus();
                 updateVisuals();
                 renderShop();
                 renderSettings();
             } else {
-                userRef.set({ score: 0, isCookie: false, musicOn: false, ownedSkins: { skin0: true }, currentSkinId: 'skin0', warnCount: 0, banUntil: 0 });
+                userRef.set({ score: 0, isCookie: false, musicOn: false, ownedSkins: { skin0: true }, currentSkinId: 'skin0' });
             }
         });
-
-        function checkBanStatus() {
-            const now = Date.now();
-            if (banUntil > now) {
-                document.getElementById('ban-screen').style.display = 'flex';
-                updateBanTimer();
-                const timerInt = setInterval(() => {
-                    const timeLeft = banUntil - Date.now();
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInt);
-                        userRef.update({ banUntil: 0, warnCount: 0 });
-                        document.getElementById('ban-screen').style.display = 'none';
-                    } else {
-                        updateBanTimer();
-                    }
-                }, 1000);
-            }
-        }
-
-        function updateBanTimer() {
-            const diff = banUntil - Date.now();
-            const mins = Math.floor(diff / 1000 / 60);
-            const secs = Math.floor((diff / 1000) % 60);
-            document.getElementById('ban-timer').innerText = `Осталось: ${mins}м ${secs}с`;
-        }
 
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.getElementById('cat-image').src = (currentSkinId === 'skin1') ? 'skin1.png' : 'image_0.png';
             document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
+            
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
             document.getElementById('aura-bg').style.background = `radial-gradient(circle at center bottom, ${accentColor} 0%, rgba(0, 0, 0, 0) 80%)`;
             
+            // Смена фона каждые 5000
             if (score > 0 && score % 5000 === 0) {
                 document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 25%, 8%)`;
             }
         }
 
         function handleTap(x, y) {
-            if (isLocalBlocked || banUntil > Date.now() || document.querySelector('.overlay-menu.open')) return;
+            if (isBlocked || document.querySelector('.overlay-menu.open')) return;
 
             const now = Date.now();
             clickHistory.push(now);
             clickHistory = clickHistory.filter(t => now - t < 1000);
 
             if (clickHistory.length > LIMIT) {
-                processWarning();
+                isBlocked = true;
+                document.getElementById('cheat-warn').style.display = 'flex';
+                tg.HapticFeedback.notificationOccurred('error');
+                setTimeout(() => {
+                    isBlocked = false;
+                    document.getElementById('cheat-warn').style.display = 'none';
+                    clickHistory = [];
+                }, 2500);
                 return;
             }
 
@@ -199,30 +172,6 @@
             if (musicActive) document.getElementById('bg-music').play().catch(()=>{});
             tg.HapticFeedback.impactOccurred('light');
             spawnPlusOne(x, y, plus);
-        }
-
-        function processWarning() {
-            isLocalBlocked = true;
-            warnCount++;
-            
-            if (warnCount >= 4) {
-                // БАН НА ЧАС
-                const hourInMs = 3600000;
-                banUntil = Date.now() + hourInMs;
-                userRef.update({ banUntil: banUntil, warnCount: 0 });
-            } else {
-                // ПРОСТО ПРЕДУПРЕЖДЕНИЕ
-                userRef.update({ warnCount: warnCount });
-                document.getElementById('warn-text').innerText = `Это твое предупреждение: ${warnCount}/3`;
-                document.getElementById('warn-screen').style.display = 'flex';
-                tg.HapticFeedback.notificationOccurred('warning');
-                
-                setTimeout(() => {
-                    document.getElementById('warn-screen').style.display = 'none';
-                    isLocalBlocked = false;
-                    clickHistory = [];
-                }, 3000);
-            }
         }
 
         function spawnPlusOne(x, y, val) {
