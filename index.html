@@ -11,25 +11,38 @@
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: none; background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; transition: background-color 2s ease; }
         
-        #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s; animation: auraExplosion 2.5s infinite; pointer-events: none; }
-        #score { font-size: 60px; font-weight: 900; color: #ffcc00; z-index: 10; margin-top: -40px; text-shadow: 0 0 30px rgba(255, 204, 0, 0.4); }
+        #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s ease-in-out; animation: auraExplosion 2.5s infinite cubic-bezier(0.15, 0.5, 0.3, 1); pointer-events: none; }
+        #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; cursor: pointer; }
+        #score { font-size: 60px; font-weight: 900; color: #ffcc00; margin: 0; text-shadow: 0 0 40px rgba(255, 204, 0, 0.4); z-index: 10; margin-top: -40px; }
         
-        #cat-wrapper { position: relative; z-index: 50; width: 80vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        #cat-image { width: 90%; height: auto; pointer-events: none; transition: 0.2s; }
+        #cat-wrapper { position: relative; z-index: 50; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
+        #cat-image { width: 90%; height: auto; pointer-events: none; transition: filter 0.5s ease; }
 
-        .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; }
-        .side-btn img { width: 100%; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: none; border: none; }
+        .side-btn img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
 
-        .overlay-menu { position: fixed; bottom: -110%; left: 0; width: 100%; height: 70vh; background: rgba(10,10,10,0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; z-index: 200; transition: 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 25px; text-align: center; border-radius: 30px 30px 0 0; }
+        #settings-btn { left: 20px; font-size: 42px; }
+        #shop-btn { right: 100px; }
+        #skin-shop-btn { right: 20px; }
+
+        .overlay-menu { position: fixed; bottom: -110%; left: 0; width: 100%; height: 75vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; border-top-left-radius: 30px; border-top-right-radius: 30px; z-index: 200; transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 30px; text-align: center; }
         .overlay-menu.open { bottom: 0; }
         
-        #warn-screen, #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #warn-screen { background: rgba(255, 120, 0, 0.95); color: white; }
-        #ban-screen { background: #000; color: #ff4444; border: 5px solid #ff4444; }
+        .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; }
+        .close-btn { background: #ff4444; color: white; border: none; padding: 12px 45px; border-radius: 12px; font-weight: bold; margin-top: 15px; text-transform: uppercase; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
-        @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.85); } 100% { transform: scale(1); } }
-        @keyframes auraExplosion { 0% { opacity: 0.4; transform: scale(0.95); } 50% { opacity: 0.6; transform: scale(1.05); } 100% { opacity: 0.4; transform: scale(0.95); } }
+        @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
+        @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
+        
+        .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; animation: plusOne 0.6s ease-out forwards; }
+        @keyframes plusOne { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(1.4); opacity: 0; } }
+
+        /* Экраны защиты */
+        #warn-screen, #ban-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        #warn-screen { background: rgba(255, 100, 0, 0.95); color: white; }
+        #ban-screen { background: #000; color: #ff4444; border: 5px solid #ff4444; }
     </style>
 </head>
 <body>
@@ -37,25 +50,44 @@
     <div id="warn-screen">
         <h1 style="font-size: 50px;">⚠️ ВНИМАНИЕ</h1>
         <p id="warn-text" style="font-size: 24px; font-weight: bold;"></p>
-        <p>Сбавь скорость, иначе получишь бан!</p>
+        <p>Не используй автокликер!</p>
     </div>
 
     <div id="ban-screen">
         <h1 style="font-size: 60px;">🚫 БАН</h1>
-        <p style="font-size: 20px;">Вы были заблокированы за использование автокликера или администратором.</p>
-        <h2 id="ban-timer" style="font-size: 30px; color: white;"></h2>
+        <p style="font-size: 20px;">Доступ ограничен администрацией или системой защиты.</p>
+        <h2 id="ban-timer" style="font-size: 32px; color: white;"></h2>
     </div>
 
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
-    <div id="score">0</div>
+    <div id="top-header">Тапай Котость!</div>
     <div id="aura-bg"></div>
+    <h1 id="score">0</h1>
 
     <div id="cat-wrapper"><img id="cat-image" src="image_0.png"></div>
 
-    <div style="left:20px;" class="side-btn" onclick="toggleMenu('settings-menu', true)"><img src="settings_icon.png"></div>
-    <div style="right:20px;" class="side-btn" onclick="toggleMenu('skin-menu', true)"><img src="skinshop.png"></div>
+    <div id="settings-btn" class="side-btn" onclick="toggleMenu('settings-menu', true)">⚙️</div>
+    <div id="shop-btn" class="side-btn" onclick="toggleMenu('shop-menu', true)"><img src="shop_new.png"></div>
+    <div id="skin-shop-btn" class="side-btn" onclick="toggleMenu('skin-shop-menu', true)"><img src="skinshop.png"></div>
+
+    <div id="skin-shop-menu" class="overlay-menu">
+        <h2>Скины</h2>
+        <div class="option-row" onclick="buyOrSelect('skin0')"><span>Дефолт</span><div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div></div>
+        <div class="option-row" onclick="buyOrSelect('skin1')"><span>Элитный (+2)</span><div id="btn-skin1" class="buy-btn">1,000</div></div>
+        <button class="close-btn" onclick="toggleMenu('skin-shop-menu', false)">ЗАКРЫТЬ</button>
+    </div>
+
+    <div id="shop-menu" class="overlay-menu"><h2>Магазин</h2><p>Скоро...</p><button class="close-btn" onclick="toggleMenu('shop-menu', false)">ЗАКРЫТЬ</button></div>
+    
+    <div id="settings-menu" class="overlay-menu">
+        <h2>Настройки</h2>
+        <div class="option-row" onclick="toggleMusic()">🎵 Музыка: <span id="music-status">ВЫКЛ</span></div>
+        <div class="option-row" onclick="toggleCurrency()">🔄 Валюта: <span id="currency-status">Котость</span></div>
+        <button class="close-btn" onclick="toggleMenu('settings-menu', false)">ЗАКРЫТЬ</button>
+    </div>
 
     <script>
+        const ADMIN_ID = 5242142630;
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
@@ -74,25 +106,30 @@
         const user = tg.initDataUnsafe?.user || { id: 0 };
         const userRef = database.ref('users/' + user.id);
 
-        let score = 0, warnCount = 0, banUntil = 0, clickHistory = [];
+        let score = 0, isCookieMode = false, musicActive = false, ownedSkins = { skin0: true }, currentSkinId = 'skin0';
+        let clickHistory = [];
+        let warnCount = 0, banUntil = 0;
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const LIMIT = isMobile ? 15 : 6; 
+        const LIMIT = isMobile ? 15 : 6;
 
-        userRef.on('value', (snap) => {
-            const data = snap.val();
+        // Слушатель базы данных
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val();
             if (data) {
                 score = data.score || 0;
+                isCookieMode = data.isCookie || false;
+                musicActive = data.musicOn || false;
+                ownedSkins = data.ownedSkins || { skin0: true };
+                currentSkinId = data.currentSkinId || 'skin0';
                 warnCount = data.warnCount || 0;
                 banUntil = data.banUntil || 0;
-                checkBan();
-                document.getElementById('score').innerText = score.toLocaleString();
                 
-                // Эффект смены фона
-                if (score > 0 && score % 5000 === 0) {
-                    document.body.style.backgroundColor = `hsl(${Math.random()*360}, 30%, 10%)`;
-                }
+                checkBan();
+                updateVisuals();
+                renderShop();
+                renderSettings();
             } else {
-                userRef.set({ score: 0, warnCount: 0, banUntil: 0 });
+                userRef.set({ score: 0, isCookie: false, musicOn: false, ownedSkins: { skin0: true }, currentSkinId: 'skin0', warnCount: 0, banUntil: 0 });
             }
         });
 
@@ -102,9 +139,9 @@
             if (banUntil > now) {
                 screen.style.display = 'flex';
                 const diff = banUntil - now;
-                const h = Math.floor(diff/3600000);
-                const m = Math.floor((diff%3600000)/60000);
-                const s = Math.floor((diff%60000)/1000);
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
                 document.getElementById('ban-timer').innerText = `Осталось: ${h}ч ${m}м ${s}с`;
             } else {
                 screen.style.display = 'none';
@@ -112,8 +149,8 @@
         }
 
         function handleTap(x, y) {
-            if (banUntil > Date.now()) return;
-            
+            if (banUntil > Date.now() || document.querySelector('.overlay-menu.open')) return;
+
             const now = Date.now();
             clickHistory.push(now);
             clickHistory = clickHistory.filter(t => now - t < 1000);
@@ -121,18 +158,24 @@
             if (clickHistory.length > LIMIT) {
                 warnCount++;
                 if (warnCount >= 4) {
+                    // Бан на час при автоклике
                     userRef.update({ banUntil: Date.now() + 3600000, warnCount: 0 });
                 } else {
                     userRef.update({ warnCount: warnCount });
                     document.getElementById('warn-text').innerText = `Предупреждение ${warnCount}/3`;
                     document.getElementById('warn-screen').style.display = 'flex';
-                    setTimeout(() => document.getElementById('warn-screen').style.display = 'none', 2000);
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    setTimeout(() => {
+                        document.getElementById('warn-screen').style.display = 'none';
+                        clickHistory = [];
+                    }, 2500);
                 }
-                clickHistory = [];
                 return;
             }
 
-            score++;
+            const plus = (currentSkinId === 'skin1') ? 2 : 1;
+            score += plus;
+            updateVisuals();
             userRef.update({ score: score });
             
             const img = document.getElementById('cat-image');
@@ -140,16 +183,93 @@
             void img.offsetWidth;
             img.classList.add('tapped');
             
+            if (musicActive) document.getElementById('bg-music').play().catch(()=>{});
             tg.HapticFeedback.impactOccurred('light');
+            spawnPlusOne(x, y, plus);
         }
+
+        function updateVisuals() {
+            document.getElementById('score').innerText = score.toLocaleString();
+            document.getElementById('cat-image').src = (currentSkinId === 'skin1') ? 'skin1.png' : 'image_0.png';
+            document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
+            const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
+            document.getElementById('aura-bg').style.background = `radial-gradient(circle at center bottom, ${accentColor} 0%, rgba(0, 0, 0, 0) 80%)`;
+            if (score > 0 && score % 5000 === 0) document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 25%, 8%)`;
+        }
+
+        // Скрытая консоль админа (5 тапов по заголовку)
+        let adminClicks = 0;
+        document.getElementById('top-header').onclick = () => {
+            if (user.id !== ADMIN_ID) return;
+            adminClicks++;
+            if (adminClicks >= 5) {
+                adminClicks = 0;
+                const cmd = prompt("Консоль: /ban [id] [время] или /unban [id]");
+                if (cmd) {
+                    const parts = cmd.split(' ');
+                    if (parts[0] === '/ban') {
+                        const targetRef = database.ref('users/' + parts[1]);
+                        const timeStr = parts[2];
+                        let ms = 3600000;
+                        if (timeStr.includes('м')) ms = parseInt(timeStr) * 60000;
+                        if (timeStr.includes('ч')) ms = parseInt(timeStr) * 3600000;
+                        if (timeStr.includes('д')) ms = parseInt(timeStr) * 86400000;
+                        targetRef.update({ banUntil: Date.now() + ms, warnCount: 0 });
+                    } else if (parts[0] === '/unban') {
+                        database.ref('users/' + parts[1]).update({ banUntil: 0, warnCount: 0 });
+                    }
+                }
+            }
+        };
+
+        function spawnPlusOne(x, y, val) {
+            const el = document.createElement('div');
+            el.className = 'tap-effect';
+            el.innerText = '+' + val;
+            el.style.left = `${x - 20}px`; el.style.top = `${y - 40}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
+
+        function renderSettings() {
+            document.getElementById('music-status').innerText = musicActive ? "ВКЛ" : "ВЫКЛ";
+            document.getElementById('currency-status').innerText = isCookieMode ? "Куки" : "Котость";
+        }
+
+        function renderShop() {
+            const s1 = document.getElementById('btn-skin1');
+            const s0 = document.getElementById('btn-skin0');
+            if (ownedSkins.skin1) {
+                s1.innerText = (currentSkinId === 'skin1') ? "ВЫБРАНО" : "ВЫБРАТЬ";
+                s1.style.background = (currentSkinId === 'skin1') ? "#0082ff" : "#44ff44";
+            }
+            s0.innerText = (currentSkinId === 'skin0') ? "ВЫБРАНО" : "ВЫБРАТЬ";
+            s0.style.background = (currentSkinId === 'skin0') ? "#0082ff" : "#44ff44";
+        }
+
+        function buyOrSelect(skinId) {
+            if (ownedSkins[skinId]) {
+                currentSkinId = skinId;
+                userRef.update({ currentSkinId: skinId });
+            } else if (score >= 1000) {
+                score -= 1000;
+                ownedSkins[skinId] = true;
+                userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
+            }
+        }
+
+        function toggleMusic() { musicActive = !musicActive; userRef.update({ musicOn: musicActive }); }
+        function toggleCurrency() { isCookieMode = !isCookieMode; userRef.update({ isCookie: isCookieMode }); }
+        function toggleMenu(id, open) { document.getElementById(id).classList.toggle('open', open); }
 
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleTap(e.touches[0].clientX, e.touches[0].clientY);
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+            }
         }, { passive: false });
 
         document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
-        function toggleMenu(id, open) { document.getElementById(id).classList.toggle('open', open); }
     </script>
 </body>
 </html>
