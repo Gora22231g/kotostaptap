@@ -18,10 +18,15 @@
         #cat-wrapper { position: relative; z-index: 20; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; }
         #cat-image { width: 90%; height: auto; pointer-events: none; transition: filter 0.5s ease; }
 
-        .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: rgba(25, 25, 25, 0.9); border: 2px solid rgba(255, 204, 0, 0.3); border-radius: 18px; font-size: 28px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        /* Общий стиль боковых кнопок */
+        .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: rgba(25, 25, 25, 0.9); border: 2px solid rgba(255, 204, 0, 0.3); border-radius: 18px; box-shadow: 0 0 15px rgba(0,0,0,0.5); overflow: hidden; }
         .side-btn:active { transform: scale(0.9); }
+        
+        #settings-btn { left: 25px; font-size: 28px; }
+        
+        /* Кнопка магазина с картинкой */
         #shop-btn { right: 25px; }
-        #settings-btn { left: 25px; }
+        #shop-btn img { width: 80%; height: 80%; object-fit: contain; }
 
         .overlay-menu { position: fixed; bottom: -100%; left: 0; width: 100%; height: 75vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; border-top-left-radius: 30px; border-top-right-radius: 30px; z-index: 200; transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 30px; text-align: center; }
         .overlay-menu.open { bottom: 0; }
@@ -57,7 +62,10 @@
     </div>
 
     <div id="settings-btn" class="side-btn" onclick="toggleMenu('settings-menu', true)">⚙️</div>
-    <div id="shop-btn" class="side-btn" onclick="toggleMenu('shop-menu', true)">🛒</div>
+    
+    <div id="shop-btn" class="side-btn" onclick="toggleMenu('shop-menu', true)">
+        <img src="skinshop.png" alt="Shop">
+    </div>
 
     <div id="shop-menu" class="overlay-menu">
         <h2>Магазин</h2>
