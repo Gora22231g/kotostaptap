@@ -15,11 +15,9 @@
         #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; }
         #score { font-size: 60px; font-weight: 900; color: #ffcc00; margin: 0; text-shadow: 0 0 40px rgba(255, 204, 0, 0.4); z-index: 10; margin-top: -40px; }
         
-        /* Контейнер для кота — должен быть доступен для кликов */
         #cat-wrapper { position: relative; z-index: 50; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
         #cat-image { width: 90%; height: auto; pointer-events: none; transition: filter 0.5s ease; }
 
-        /* Кнопки меню */
         .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: none; border: none; }
         .side-btn img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         .side-btn:active { transform: scale(0.9); }
@@ -28,7 +26,6 @@
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
 
-        /* Оверлей меню */
         .overlay-menu { position: fixed; bottom: -110%; left: 0; width: 100%; height: 75vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 3px solid #ffcc00; border-top-left-radius: 30px; border-top-right-radius: 30px; z-index: 200; transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); padding: 30px; text-align: center; pointer-events: auto; }
         .overlay-menu.open { bottom: 0; }
         .overlay-menu h2 { font-size: 26px; color: #ffcc00; margin-bottom: 25px; text-transform: uppercase; }
@@ -41,7 +38,6 @@
 
         .close-btn { background: #ff4444; color: white; border: none; padding: 12px 45px; border-radius: 12px; font-weight: bold; margin-top: 15px; text-transform: uppercase; cursor: pointer; }
 
-        /* Анимации */
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
@@ -81,6 +77,10 @@
         <div class="option-row" onclick="buyOrSelect('skin1')">
             <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
             <div id="btn-skin1" class="buy-btn">1,000</div>
+        </div>
+        <div class="option-row" onclick="buyOrSelect('skin2')">
+            <div style="display:flex; align-items:center;"><img src="skin2.png" width="40" style="margin-right:10px;"> Куки дино (+3)</div>
+            <div id="btn-skin2" class="buy-btn">5,000</div>
         </div>
         <button class="close-btn" onclick="toggleMenu('skin-shop-menu', false)">ЗАКРЫТЬ</button>
     </div>
@@ -148,7 +148,12 @@
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.querySelectorAll('.current-balance').forEach(b => b.innerText = score.toLocaleString());
-            document.getElementById('cat-image').src = (currentSkinId === 'skin1') ? 'skin1.png' : 'image_0.png';
+            
+            let skinImg = 'image_0.png';
+            if (currentSkinId === 'skin1') skinImg = 'skin1.png';
+            if (currentSkinId === 'skin2') skinImg = 'skin2.png';
+            
+            document.getElementById('cat-image').src = skinImg;
             document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
             
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
@@ -162,15 +167,23 @@
         }
 
         function renderShop() {
-            const s1 = document.getElementById('btn-skin1');
-            const s0 = document.getElementById('btn-skin0');
-            
-            if (ownedSkins.skin1) {
-                s1.innerText = (currentSkinId === 'skin1') ? "ВЫБРАНО" : "ВЫБРАТЬ";
-                s1.style.background = (currentSkinId === 'skin1') ? "#0082ff" : "#44ff44";
-            }
-            s0.innerText = (currentSkinId === 'skin0') ? "ВЫБРАНО" : "ВЫБРАТЬ";
-            s0.style.background = (currentSkinId === 'skin0') ? "#0082ff" : "#44ff44";
+            const skins = [
+                { id: 'skin0', price: 0 },
+                { id: 'skin1', price: 1000 },
+                { id: 'skin2', price: 5000 }
+            ];
+            skins.forEach(skin => {
+                const btn = document.getElementById('btn-' + skin.id);
+                if (btn) {
+                    if (ownedSkins[skin.id]) {
+                        btn.innerText = (currentSkinId === skin.id) ? "ВЫБРАНО" : "ВЫБРАТЬ";
+                        btn.style.background = (currentSkinId === skin.id) ? "#0082ff" : "#44ff44";
+                    } else {
+                        btn.innerText = skin.price.toLocaleString();
+                        btn.style.background = "#ffcc00";
+                    }
+                }
+            });
         }
 
         function buyOrSelect(skinId) {
@@ -178,13 +191,17 @@
                 currentSkinId = skinId;
                 userRef.update({ currentSkinId: skinId });
                 tg.HapticFeedback.impactOccurred('medium');
-            } else if (score >= 1000) {
-                score -= 1000;
-                ownedSkins[skinId] = true;
-                userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
-                tg.HapticFeedback.notificationOccurred('success');
             } else {
-                tg.HapticFeedback.notificationOccurred('error');
+                const prices = { skin1: 1000, skin2: 5000 };
+                const price = prices[skinId];
+                if (score >= price) {
+                    score -= price;
+                    ownedSkins[skinId] = true;
+                    userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
             }
         }
 
@@ -203,10 +220,12 @@
         }
 
         function handleTap(x, y) {
-            // Проверяем, не открыто ли какое-либо меню
             if (document.querySelector('.overlay-menu.open')) return;
 
-            const plus = (currentSkinId === 'skin1') ? 2 : 1;
+            let plus = 1;
+            if (currentSkinId === 'skin1') plus = 2;
+            if (currentSkinId === 'skin2') plus = 3;
+
             score += plus;
             updateVisuals();
             userRef.update({ score: score });
@@ -235,7 +254,6 @@
             tg.HapticFeedback.impactOccurred('medium');
         }
 
-        // Правильный обработчик тапов для мобилок
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -243,7 +261,6 @@
             }
         }, { passive: false });
 
-        // Для ПК (тестирование)
         document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => {
             handleTap(e.clientX, e.clientY);
         });
