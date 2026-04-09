@@ -26,41 +26,51 @@
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
 
-        /* ОБНОВЛЕННОЕ МЕНЮ: на весь экран и со скроллом */
+        /* ОБНОВЛЕННОЕ ВЫДВИЖНОЕ МЕНЮ */
         .overlay-menu { 
             position: fixed; 
-            bottom: -110%; 
+            bottom: -100%; 
             left: 0; 
             width: 100%; 
-            height: 100vh; /* Высота на весь экран */
+            height: 100vh; 
             background: rgba(10, 10, 10, 0.98); 
-            backdrop-filter: blur(20px); 
+            backdrop-filter: blur(25px); 
             border-top: 3px solid #ffcc00; 
+            border-radius: 30px 30px 0 0;
             z-index: 200; 
-            transition: bottom 0.4s cubic-bezier(0.32, 1, 0.23, 1); 
-            padding: 40px 30px; 
+            transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); 
+            padding: 15px 30px 40px; 
             text-align: center; 
-            overflow-y: auto; /* Добавляем прокрутку */
-            -webkit-overflow-scrolling: touch;
+            touch-action: none; /* Управляем через JS */
         }
-        .overlay-menu.open { bottom: 0; }
-        .overlay-menu h2 { font-size: 28px; color: #ffcc00; margin-bottom: 25px; text-transform: uppercase; }
+        
+        .overlay-menu.open { transform: translateY(-75%); } /* По умолчанию открыто на 75% */
+        .overlay-menu.full { transform: translateY(-100%); } /* На весь экран */
 
-        .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        /* Ручка для перетаскивания */
+        .drag-handle { width: 50px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: grab; }
+
+        /* Контейнер для контента со скроллом */
+        .menu-content { 
+            height: calc(100% - 40px); 
+            overflow-y: auto; 
+            padding-bottom: 50px;
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .option-row:active { transform: scale(0.98); background: #252525; }
         
-        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; pointer-events: none; }
-
-        .close-btn { background: #ff4444; color: white; border: none; padding: 15px 45px; border-radius: 15px; font-weight: bold; margin-top: 20px; text-transform: uppercase; cursor: pointer; width: 100%; max-width: 250px; }
+        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; }
+        .close-btn { background: #ff4444; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-transform: uppercase; width: 100%; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
         
-        .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; text-shadow: 0 0 15px rgba(255, 204, 0, 0.8); animation: plusOne 0.6s ease-out forwards; }
-        @keyframes plusOne { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(1.4); opacity: 0; } }
-        
-        #error-msg { display: none; text-align: center; color: #ff4444; padding: 20px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; }
+        .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; animation: plusOne 0.6s ease-out forwards; }
+        @keyframes plusOne { 0% { transform: translateY(0) opacity: 1; } 100% { transform: translateY(-150px) opacity: 0; } }
+        #error-msg { display: none; text-align: center; color: #ff4444; position: fixed; width: 100%; height: 100%; background: #050505; z-index: 1000; }
     </style>
 </head>
 <body>
@@ -76,45 +86,54 @@
         <img id="cat-image" src="image_0.png" alt="Котость">
     </div>
 
-    <div id="settings-btn" class="side-btn" onclick="toggleMenu('settings-menu', true)">⚙️</div>
-    <div id="shop-btn" class="side-btn" onclick="toggleMenu('shop-menu', true)"><img src="shop_new.png"></div>
-    <div id="skin-shop-btn" class="side-btn" onclick="toggleMenu('skin-shop-menu', true)"><img src="skinshop.png"></div>
+    <div id="settings-btn" class="side-btn" onclick="openMenu('settings-menu')">⚙️</div>
+    <div id="shop-btn" class="side-btn" onclick="openMenu('shop-menu')"><img src="shop_new.png"></div>
+    <div id="skin-shop-btn" class="side-btn" onclick="openMenu('skin-shop-menu')"><img src="skinshop.png"></div>
 
     <div id="skin-shop-menu" class="overlay-menu">
-        <h2>Магазин скинов</h2>
-        <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
-            <span style="color: #ffcc00;">БАЛАНС:</span> <span class="current-balance">0</span>
+        <div class="drag-handle"></div>
+        <div class="menu-content">
+            <h2>Магазин скинов</h2>
+            <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
+                <span style="color: #ffcc00;">БАЛАНС:</span> <span class="current-balance">0</span>
+            </div>
+            <div class="option-row" onclick="buyOrSelect('skin0')">
+                <div style="display:flex; align-items:center;"><img src="image_0.png" width="40" style="margin-right:10px;"> Дефолт</div>
+                <div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div>
+            </div>
+            <div class="option-row" onclick="buyOrSelect('skin1')">
+                <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
+                <div id="btn-skin1" class="buy-btn">1,000</div>
+            </div>
+            <div class="option-row" onclick="buyOrSelect('skin2')">
+                <div style="display:flex; align-items:center;"><img src="skin2.png" width="40" style="margin-right:10px;"> Куки дино (+3)</div>
+                <div id="btn-skin2" class="buy-btn">5,000</div>
+            </div>
+            <button class="close-btn" onclick="closeMenu('skin-shop-menu')">ЗАКРЫТЬ</button>
         </div>
-        <div class="option-row" onclick="buyOrSelect('skin0')">
-            <div style="display:flex; align-items:center;"><img src="image_0.png" width="40" style="margin-right:10px;"> Дефолт</div>
-            <div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div>
-        </div>
-        <div class="option-row" onclick="buyOrSelect('skin1')">
-            <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
-            <div id="btn-skin1" class="buy-btn">1,000</div>
-        </div>
-        <div class="option-row" onclick="buyOrSelect('skin2')">
-            <div style="display:flex; align-items:center;"><img src="skin2.png" width="40" style="margin-right:10px;"> Куки дино (+3)</div>
-            <div id="btn-skin2" class="buy-btn">5,000</div>
-        </div>
-        <button class="close-btn" onclick="toggleMenu('skin-shop-menu', false)">ЗАКРЫТЬ</button>
-        <div style="height: 50px;"></div> </div>
+    </div>
 
     <div id="shop-menu" class="overlay-menu">
-        <h2>Улучшения</h2>
-        <div class="option-row">Скоро...</div>
-        <button class="close-btn" onclick="toggleMenu('shop-menu', false)">ЗАКРЫТЬ</button>
+        <div class="drag-handle"></div>
+        <div class="menu-content">
+            <h2>Улучшения</h2>
+            <div class="option-row">Скоро...</div>
+            <button class="close-btn" onclick="closeMenu('shop-menu')">ЗАКРЫТЬ</button>
+        </div>
     </div>
 
     <div id="settings-menu" class="overlay-menu">
-        <h2>Настройки</h2>
-        <div class="option-row" onclick="toggleMusic()">
-            <span>🎵 Музыка</span> <span id="music-status">ВЫКЛ</span>
+        <div class="drag-handle"></div>
+        <div class="menu-content">
+            <h2>Настройки</h2>
+            <div class="option-row" onclick="toggleMusic()">
+                <span>🎵 Музыка</span> <span id="music-status">ВЫКЛ</span>
+            </div>
+            <div class="option-row" onclick="toggleCurrency()">
+                <span>🔄 Валюта</span> <span id="currency-status">Котость</span>
+            </div>
+            <button class="close-btn" onclick="closeMenu('settings-menu')">ЗАКРЫТЬ</button>
         </div>
-        <div class="option-row" onclick="toggleCurrency()">
-            <span>🔄 Валюта</span> <span id="currency-status">Котость</span>
-        </div>
-        <button class="close-btn" onclick="toggleMenu('settings-menu', false)">ЗАКРЫТЬ</button>
     </div>
 
     <script>
@@ -134,43 +153,72 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const user = tg.initDataUnsafe?.user;
-        
         if (!user) { document.getElementById('error-msg').style.display='block'; throw ""; }
 
         const userRef = database.ref('users/' + user.id);
-        let score = 0;
-        let isCookieMode = false;
-        let musicActive = false;
-        let ownedSkins = { skin0: true };
-        let currentSkinId = 'skin0';
+        let score = 0, isCookieMode = false, musicActive = false, ownedSkins = { skin0: true }, currentSkinId = 'skin0';
 
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                score = data.score || 0;
-                isCookieMode = data.isCookie || false;
-                musicActive = data.musicOn || false;
-                ownedSkins = data.ownedSkins || { skin0: true };
+                score = data.score || 0; isCookieMode = data.isCookie || false;
+                musicActive = data.musicOn || false; ownedSkins = data.ownedSkins || { skin0: true };
                 currentSkinId = data.currentSkinId || 'skin0';
-                updateVisuals();
-                renderShop();
-                renderSettings();
+                updateVisuals(); renderShop(); renderSettings();
             } else {
                 userRef.set({ score: 0, isCookie: false, musicOn: false, ownedSkins: { skin0: true }, currentSkinId: 'skin0' });
             }
         });
 
+        // ЛОГИКА ПЕРЕТАСКИВАНИЯ МЕНЮ (Swipe up/down)
+        let startY = 0;
+        let currentActiveMenu = null;
+
+        function openMenu(id) {
+            currentActiveMenu = document.getElementById(id);
+            currentActiveMenu.classList.add('open');
+            currentActiveMenu.classList.remove('full');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeMenu(id) {
+            const menu = document.getElementById(id);
+            menu.classList.remove('open', 'full');
+            currentActiveMenu = null;
+        }
+
+        document.querySelectorAll('.overlay-menu').forEach(menu => {
+            menu.addEventListener('touchstart', e => {
+                // Если мы скроллим контент внутри, не мешаем жесту, пока мы не на самом верху
+                if (menu.querySelector('.menu-content').scrollTop > 0) return;
+                startY = e.touches[0].clientY;
+            });
+
+            menu.addEventListener('touchmove', e => {
+                if (menu.querySelector('.menu-content').scrollTop > 0) return;
+                let moveY = e.touches[0].clientY;
+                let diff = startY - moveY;
+
+                if (diff > 50) menu.classList.add('full'); // Тянем вверх -> во весь экран
+                if (diff < -100) closeMenu(menu.id); // Тянем вниз -> закрываем
+            });
+        });
+
+        // Добавляем поддержку колесика мыши для ПК
+        document.querySelectorAll('.menu-content').forEach(content => {
+            content.addEventListener('wheel', (e) => {
+                if (e.deltaY < -30 && content.scrollTop <= 0) {
+                    content.parentElement.classList.add('full');
+                }
+            });
+        });
+
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.querySelectorAll('.current-balance').forEach(b => b.innerText = score.toLocaleString());
-            
-            let skinImg = 'image_0.png';
-            if (currentSkinId === 'skin1') skinImg = 'skin1.png';
-            if (currentSkinId === 'skin2') skinImg = 'skin2.png';
-            
+            let skinImg = (currentSkinId === 'skin1') ? 'skin1.png' : (currentSkinId === 'skin2' ? 'skin2.png' : 'image_0.png');
             document.getElementById('cat-image').src = skinImg;
             document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
-            
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
             document.getElementById('aura-bg').style.background = `radial-gradient(circle at center bottom, ${accentColor} 0%, rgba(0, 0, 0, 0) 80%)`;
             document.getElementById('cat-image').style.filter = `drop-shadow(0 0 35px ${accentColor})`;
@@ -182,19 +230,15 @@
         }
 
         function renderShop() {
-            const skins = [
-                { id: 'skin0', price: 0 },
-                { id: 'skin1', price: 1000 },
-                { id: 'skin2', price: 5000 }
-            ];
-            skins.forEach(skin => {
-                const btn = document.getElementById('btn-' + skin.id);
+            const skins = [{id:'skin0', p:0}, {id:'skin1', p:1000}, {id:'skin2', p:5000}];
+            skins.forEach(s => {
+                const btn = document.getElementById('btn-' + s.id);
                 if (btn) {
-                    if (ownedSkins[skin.id]) {
-                        btn.innerText = (currentSkinId === skin.id) ? "ВЫБРАНО" : "ВЫБРАТЬ";
-                        btn.style.background = (currentSkinId === skin.id) ? "#0082ff" : "#44ff44";
+                    if (ownedSkins[s.id]) {
+                        btn.innerText = (currentSkinId === s.id) ? "ВЫБРАНО" : "ВЫБРАТЬ";
+                        btn.style.background = (currentSkinId === s.id) ? "#0082ff" : "#44ff44";
                     } else {
-                        btn.innerText = skin.price.toLocaleString();
+                        btn.innerText = s.p.toLocaleString();
                         btn.style.background = "#ffcc00";
                     }
                 }
@@ -205,12 +249,10 @@
             if (ownedSkins[skinId]) {
                 currentSkinId = skinId;
                 userRef.update({ currentSkinId: skinId });
-                tg.HapticFeedback.impactOccurred('medium');
             } else {
                 const prices = { skin1: 1000, skin2: 5000 };
-                const price = prices[skinId];
-                if (score >= price) {
-                    score -= price;
+                if (score >= prices[skinId]) {
+                    score -= prices[skinId];
                     ownedSkins[skinId] = true;
                     userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
                     tg.HapticFeedback.notificationOccurred('success');
@@ -225,22 +267,16 @@
             const audio = document.getElementById('bg-music');
             if (musicActive) audio.play().catch(()=>{}); else audio.pause();
             userRef.update({ musicOn: musicActive });
-            tg.HapticFeedback.impactOccurred('light');
         }
 
         function toggleCurrency() {
             isCookieMode = !isCookieMode;
             userRef.update({ isCookie: isCookieMode });
-            tg.HapticFeedback.impactOccurred('light');
         }
 
         function handleTap(x, y) {
-            if (document.querySelector('.overlay-menu.open')) return;
-
-            let plus = 1;
-            if (currentSkinId === 'skin1') plus = 2;
-            if (currentSkinId === 'skin2') plus = 3;
-
+            if (currentActiveMenu) return;
+            let plus = (currentSkinId === 'skin1') ? 2 : (currentSkinId === 'skin2' ? 3 : 1);
             score += plus;
             updateVisuals();
             userRef.update({ score: score });
@@ -250,7 +286,6 @@
             void tapper.offsetWidth;
             tapper.classList.add('tapped');
             
-            if (musicActive) document.getElementById('bg-music').play().catch(()=>{});
             tg.HapticFeedback.impactOccurred('light');
             spawnPlusOne(x, y, plus);
         }
@@ -262,11 +297,6 @@
             el.style.left = `${x - 20}px`; el.style.top = `${y - 40}px`;
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 600);
-        }
-
-        function toggleMenu(id, open) {
-            document.getElementById(id).classList.toggle('open', open);
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
