@@ -26,7 +26,6 @@
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
 
-        /* ОБНОВЛЕННОЕ ВЫДВИЖНОЕ МЕНЮ */
         .overlay-menu { 
             position: fixed; 
             bottom: -100%; 
@@ -41,28 +40,24 @@
             transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); 
             padding: 15px 30px 40px; 
             text-align: center; 
-            touch-action: none; /* Управляем через JS */
         }
         
-        .overlay-menu.open { transform: translateY(-75%); } /* По умолчанию открыто на 75% */
-        .overlay-menu.full { transform: translateY(-100%); } /* На весь экран */
+        .overlay-menu.open { transform: translateY(-75%); }
+        .overlay-menu.full { transform: translateY(-100%); }
 
-        /* Ручка для перетаскивания */
-        .drag-handle { width: 50px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 20px; cursor: grab; }
+        .drag-handle { width: 60px; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 0 auto 20px; cursor: ns-resize; }
 
-        /* Контейнер для контента со скроллом */
         .menu-content { 
             height: calc(100% - 40px); 
             overflow-y: auto; 
             padding-bottom: 50px;
-            -webkit-overflow-scrolling: touch; 
         }
 
         .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .option-row:active { transform: scale(0.98); background: #252525; }
         
         .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; }
-        .close-btn { background: #ff4444; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-transform: uppercase; width: 100%; }
+        .close-btn { background: #ff4444; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-transform: uppercase; width: 100%; cursor: pointer; }
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
@@ -170,8 +165,9 @@
             }
         });
 
-        // ЛОГИКА ПЕРЕТАСКИВАНИЯ МЕНЮ (Swipe up/down)
+        // ЛОГИКА ТЯНУЧЕГО МЕНЮ (ПК + ТЕЛЕФОН)
         let startY = 0;
+        let isDragging = false;
         let currentActiveMenu = null;
 
         function openMenu(id) {
@@ -183,32 +179,43 @@
 
         function closeMenu(id) {
             const menu = document.getElementById(id);
-            menu.classList.remove('open', 'full');
+            if (menu) menu.classList.remove('open', 'full');
             currentActiveMenu = null;
         }
 
+        function handleDragStart(y) {
+            if (!currentActiveMenu || currentActiveMenu.querySelector('.menu-content').scrollTop > 0) return;
+            startY = y;
+            isDragging = true;
+        }
+
+        function handleDragMove(y) {
+            if (!isDragging || !currentActiveMenu) return;
+            let diff = startY - y;
+            if (diff > 80) currentActiveMenu.classList.add('full');
+            if (diff < -100) closeMenu(currentActiveMenu.id);
+        }
+
+        // События для телефона
         document.querySelectorAll('.overlay-menu').forEach(menu => {
-            menu.addEventListener('touchstart', e => {
-                // Если мы скроллим контент внутри, не мешаем жесту, пока мы не на самом верху
-                if (menu.querySelector('.menu-content').scrollTop > 0) return;
-                startY = e.touches[0].clientY;
-            });
-
-            menu.addEventListener('touchmove', e => {
-                if (menu.querySelector('.menu-content').scrollTop > 0) return;
-                let moveY = e.touches[0].clientY;
-                let diff = startY - moveY;
-
-                if (diff > 50) menu.classList.add('full'); // Тянем вверх -> во весь экран
-                if (diff < -100) closeMenu(menu.id); // Тянем вниз -> закрываем
-            });
+            menu.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
+            menu.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
+            menu.addEventListener('touchend', () => isDragging = false);
         });
 
-        // Добавляем поддержку колесика мыши для ПК
+        // События для мыши (ПК)
+        document.querySelectorAll('.drag-handle').forEach(handle => {
+            handle.addEventListener('mousedown', e => handleDragStart(e.clientY));
+        });
+
+        window.addEventListener('mousemove', e => handleDragMove(e.clientY));
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        // Колесико мыши
         document.querySelectorAll('.menu-content').forEach(content => {
             content.addEventListener('wheel', (e) => {
-                if (e.deltaY < -30 && content.scrollTop <= 0) {
-                    content.parentElement.classList.add('full');
+                if (e.deltaY < -40 && content.scrollTop <= 0 && currentActiveMenu) {
+                    currentActiveMenu.classList.add('full');
                 }
             });
         });
@@ -255,9 +262,6 @@
                     score -= prices[skinId];
                     ownedSkins[skinId] = true;
                     userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
-                    tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    tg.HapticFeedback.notificationOccurred('error');
                 }
             }
         }
@@ -280,12 +284,10 @@
             score += plus;
             updateVisuals();
             userRef.update({ score: score });
-            
             const tapper = document.getElementById('cat-wrapper');
             tapper.classList.remove('tapped');
             void tapper.offsetWidth;
             tapper.classList.add('tapped');
-            
             tg.HapticFeedback.impactOccurred('light');
             spawnPlusOne(x, y, plus);
         }
