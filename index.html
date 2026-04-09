@@ -11,21 +11,15 @@
 
     <script>
         (function() {
-            // КОГДА ОБНОВЛЯЕШЬ САЙТ — ПРОСТО ИЗМЕНИ ЭТУ ЦИФРУ (например на "1.1.1")
-            const APP_VERSION = "1.1.0"; 
+            const APP_VERSION = "1.1.2"; 
             const savedVersion = localStorage.getItem('app_version');
-
             if (savedVersion !== APP_VERSION) {
                 localStorage.setItem('app_version', APP_VERSION);
-                
-                // Сброс всех кешей, если они есть
                 if ('caches' in window) {
                     caches.keys().then(names => {
                         for (let name of names) caches.delete(name);
                     });
                 }
-                
-                // Перезагрузка страницы с защитой от кеша
                 window.location.href = window.location.pathname + '?v=' + APP_VERSION;
             }
         })();
@@ -37,79 +31,37 @@
     
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        
         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: none; background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; }
-        
         #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s ease-in-out; animation: auraExplosion 2.5s infinite cubic-bezier(0.15, 0.5, 0.3, 1); pointer-events: none; }
         #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; }
         #score { font-size: 60px; font-weight: 900; color: #ffcc00; margin: 0; text-shadow: 0 0 40px rgba(255, 204, 0, 0.4); z-index: 10; margin-top: -40px; }
-        
         #cat-wrapper { position: relative; z-index: 50; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
         #cat-image { width: 90%; height: auto; pointer-events: none; transition: filter 0.5s ease; }
-
         .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: none; border: none; }
         .side-btn img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         .side-btn:active { transform: scale(0.9); }
-
         #settings-btn { left: 20px; font-size: 42px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
-
-        .overlay-menu { 
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 100vh; 
-            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(25px); 
-            border-top: 3px solid #ffcc00; border-radius: 30px 30px 0 0;
-            z-index: 200; transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); 
-            padding: 10px 20px 40px; text-align: center;
-        }
-        
+        .overlay-menu { position: fixed; bottom: -100%; left: 0; width: 100%; height: 100vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(25px); border-top: 3px solid #ffcc00; border-radius: 30px 30px 0 0; z-index: 200; transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); padding: 10px 20px 40px; text-align: center; }
         .overlay-menu.open { transform: translateY(-75%); }
         .overlay-menu.full { transform: translateY(-100%); }
-
         .drag-handle { width: 60px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 10px auto 10px; cursor: ns-resize; }
-        
-        .close-btn-top {
-            position: absolute; top: 25px; right: 20px;
-            width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
-            z-index: 210; transition: background 0.2s;
-        }
+        .close-btn-top { position: absolute; top: 25px; right: 20px; width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); z-index: 210; transition: background 0.2s; }
         .close-btn-top:active { background: rgba(255, 0, 0, 0.5); transform: scale(0.9); }
-
-        .scroll-hint { 
-            font-size: 12px; color: #ffcc00; margin-bottom: 15px; 
-            transition: opacity 0.3s ease; animation: pulseHint 2s infinite; 
-        }
+        .scroll-hint { font-size: 12px; color: #ffcc00; margin-bottom: 15px; transition: opacity 0.3s ease; animation: pulseHint 2s infinite; }
         .scroll-hint.hidden { opacity: 0; pointer-events: none; }
-        @keyframes pulseHint { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
-
-        .menu-content { 
-            height: calc(100% - 70px); overflow-y: auto; padding-bottom: 80px;
-            scrollbar-width: none; cursor: grab;
-        }
-        .menu-content:active { cursor: grabbing; }
+        .menu-content { height: calc(100% - 70px); overflow-y: auto; padding-bottom: 80px; scrollbar-width: none; cursor: grab; }
         .menu-content::-webkit-scrollbar { display: none; }
-
         .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .option-row:active { transform: scale(0.98); background: #252525; }
-        
         .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; min-width: 80px; }
-
-        .tap-effect { 
-            position: fixed; color: #ffcc00; font-size: 48px; font-weight: 900; 
-            pointer-events: none; z-index: 999; text-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
-            animation: flyUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
-        }
-        @keyframes flyUp { 
-            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 
-            20% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -180px) scale(1); opacity: 0; } 
-        }
-
+        .tap-effect { position: fixed; color: #ffcc00; font-size: 48px; font-weight: 900; pointer-events: none; z-index: 999; text-shadow: 0 0 20px rgba(255, 204, 0, 0.8); animation: flyUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes flyUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -180px) scale(1); opacity: 0; } }
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
+        @keyframes pulseHint { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
@@ -141,6 +93,10 @@
             <div class="option-row" onclick="buyOrSelect('skin0')">
                 <div style="display:flex; align-items:center;"><img src="image_0.png" width="40" style="margin-right:10px;"> Дефолт</div>
                 <div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div>
+            </div>
+            <div class="option-row" onclick="buyOrSelect('skin3')">
+                <div style="display:flex; align-items:center;"><img src="arhip.png" width="40" style="margin-right:10px;"> Архип (+1.5)</div>
+                <div id="btn-skin3" class="buy-btn">500</div>
             </div>
             <div class="option-row" onclick="buyOrSelect('skin1')">
                 <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
@@ -203,8 +159,10 @@
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                score = data.score || 0; isCookieMode = data.isCookie || false;
-                musicActive = data.musicOn || false; ownedSkins = data.ownedSkins || { skin0: true };
+                score = data.score || 0; 
+                isCookieMode = data.isCookie || false;
+                musicActive = data.musicOn || false; 
+                ownedSkins = data.ownedSkins || { skin0: true };
                 currentSkinId = data.currentSkinId || 'skin0';
                 updateVisuals(); renderShop(); renderSettings();
             }
@@ -229,10 +187,7 @@
 
         const handleStart = (y) => { 
             if (!currentActiveMenu) return;
-            const hint = currentActiveMenu.querySelector('.scroll-hint');
-            if (hint) hint.classList.add('hidden');
-            startY = y; 
-            isDragging = true; 
+            startY = y; isDragging = true; 
         };
 
         const handleMove = (y) => {
@@ -245,33 +200,20 @@
         window.addEventListener('touchstart', e => handleStart(e.touches[0].clientY));
         window.addEventListener('touchmove', e => handleMove(e.touches[0].clientY));
         window.addEventListener('mousedown', e => { 
-            if (e.target.closest('.drag-handle') || (e.target.closest('.menu-content') && !e.target.closest('.buy-btn') && !e.target.closest('.option-row'))) handleStart(e.clientY); 
+            if (e.target.closest('.drag-handle')) handleStart(e.clientY); 
         });
         window.addEventListener('mousemove', e => handleMove(e.clientY));
         window.addEventListener('mouseup', () => isDragging = false);
 
-        document.querySelectorAll('.menu-content').forEach(content => {
-            let isDown = false, startScrollTop, startMouseY;
-            content.addEventListener('mousedown', (e) => {
-                if(e.target.closest('.option-row') || e.target.closest('.buy-btn')) return;
-                isDown = true; startMouseY = e.pageY; startScrollTop = content.scrollTop;
-            });
-            window.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                const walk = (e.pageY - startMouseY) * 1.5;
-                content.scrollTop = startScrollTop - walk;
-                if (Math.abs(walk) > 5) {
-                    const hint = content.parentElement.querySelector('.scroll-hint');
-                    if (hint) hint.classList.add('hidden');
-                }
-            });
-            window.addEventListener('mouseup', () => isDown = false);
-        });
-
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.querySelectorAll('.current-balance').forEach(b => b.innerText = score.toLocaleString());
-            let skinImg = (currentSkinId === 'skin1') ? 'skin1.png' : (currentSkinId === 'skin2' ? 'skin2.png' : 'image_0.png');
+            
+            let skinImg = 'image_0.png';
+            if (currentSkinId === 'skin1') skinImg = 'skin1.png';
+            else if (currentSkinId === 'skin2') skinImg = 'skin2.png';
+            else if (currentSkinId === 'skin3') skinImg = 'arhip.png';
+            
             document.getElementById('cat-image').src = skinImg;
             document.getElementById('top-header').innerText = isCookieMode ? "Тапай Куки!" : "Тапай Котость!";
             const accentColor = isCookieMode ? "#ff9500" : "#0082ff";
@@ -285,8 +227,13 @@
         }
 
         function renderShop() {
-            const skins = [{id:'skin0', p:0}, {id:'skin1', p:1000}, {id:'skin2', p:5000}];
-            skins.forEach(s => {
+            const skinsList = [
+                {id:'skin0', p:0}, 
+                {id:'skin3', p:500}, 
+                {id:'skin1', p:1000}, 
+                {id:'skin2', p:5000}
+            ];
+            skinsList.forEach(s => {
                 const btn = document.getElementById('btn-' + s.id);
                 if (btn) {
                     if (ownedSkins[s.id]) {
@@ -305,9 +252,9 @@
                 currentSkinId = skinId;
                 userRef.update({ currentSkinId: skinId });
             } else {
-                const prices = { skin1: 1000, skin2: 5000 };
+                const prices = { skin1: 1000, skin2: 5000, skin3: 500 };
                 if (score >= prices[skinId]) {
-                    score -= prices[skinId];
+                    score = parseFloat((score - prices[skinId]).toFixed(1));
                     ownedSkins[skinId] = true;
                     userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
                     tg.HapticFeedback.notificationOccurred('success');
@@ -329,10 +276,16 @@
 
         function handleTap(x, y) {
             if (currentActiveMenu) return;
-            let plus = (currentSkinId === 'skin1') ? 2 : (currentSkinId === 'skin2' ? 3 : 1);
-            score += plus;
+            
+            let plus = 1;
+            if (currentSkinId === 'skin1') plus = 2;
+            else if (currentSkinId === 'skin2') plus = 3;
+            else if (currentSkinId === 'skin3') plus = 1.5;
+            
+            score = parseFloat((score + plus).toFixed(1));
             updateVisuals();
             userRef.update({ score: score });
+            
             const tapper = document.getElementById('cat-wrapper');
             tapper.classList.remove('tapped');
             void tapper.offsetWidth;
@@ -356,7 +309,6 @@
                 handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
             }
         });
-
         document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => {
             handleTap(e.clientX, e.clientY);
         });
