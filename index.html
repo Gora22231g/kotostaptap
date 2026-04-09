@@ -4,9 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Котость Таппер</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <script>
+        (function() {
+            // КОГДА ОБНОВЛЯЕШЬ САЙТ — ПРОСТО ИЗМЕНИ ЭТУ ЦИФРУ (например на "1.1.1")
+            const APP_VERSION = "1.1.0"; 
+            const savedVersion = localStorage.getItem('app_version');
+
+            if (savedVersion !== APP_VERSION) {
+                localStorage.setItem('app_version', APP_VERSION);
+                
+                // Сброс всех кешей, если они есть
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        for (let name of names) caches.delete(name);
+                    });
+                }
+                
+                // Перезагрузка страницы с защитой от кеша
+                window.location.href = window.location.pathname + '?v=' + APP_VERSION;
+            }
+        })();
+    </script>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         
@@ -40,7 +68,6 @@
 
         .drag-handle { width: 60px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 10px auto 10px; cursor: ns-resize; }
         
-        /* НОВАЯ КНОПКА ЗАКРЫТЬ СПРАВА */
         .close-btn-top {
             position: absolute; top: 25px; right: 20px;
             width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1);
