@@ -11,16 +11,32 @@
 
     <script>
         (function() {
-            const APP_VERSION = "1.1.2"; 
+            // МЕНЯЙ ЭТО ЧИСЛО ПРИ КАЖДОМ ПУШЕ (например: 1.1.4, 1.1.5...)
+            const APP_VERSION = "1.1.3"; 
             const savedVersion = localStorage.getItem('app_version');
+
             if (savedVersion !== APP_VERSION) {
+                // Визуальный индикатор обновления, чтобы не было "белого экрана"
+                document.write(`
+                    <div style="background:#050505;color:white;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;flex-direction:column;position:fixed;top:0;left:0;width:100%;z-index:9999;">
+                        <div style="border:4px solid #ffcc00;border-top:4px solid transparent;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;"></div>
+                        <p style="margin-top:20px;font-weight:bold;letter-spacing:1px;font-size:14px;">ЗАГРУЗКА ОБНОВЛЕНИЯ...</p>
+                        <style>@keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+                    </div>`);
+
                 localStorage.setItem('app_version', APP_VERSION);
+                
+                // Очистка кеша браузера
                 if ('caches' in window) {
                     caches.keys().then(names => {
                         for (let name of names) caches.delete(name);
                     });
                 }
-                window.location.href = window.location.pathname + '?v=' + APP_VERSION;
+
+                // Перезагрузка с параметром версии для пробития кеша Telegram
+                setTimeout(() => {
+                    window.location.href = window.location.pathname + '?v=' + APP_VERSION;
+                }, 500);
             }
         })();
     </script>
@@ -32,41 +48,51 @@
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; touch-action: none; background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; }
+        
+        /* Эффекты фона */
         #aura-bg { position: fixed; top: -15%; left: -15%; width: 130%; height: 130%; z-index: -1; transition: background 1.5s ease-in-out; animation: auraExplosion 2.5s infinite cubic-bezier(0.15, 0.5, 0.3, 1); pointer-events: none; }
+        
         #top-header { position: fixed; top: 30px; font-size: 24px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); z-index: 10; }
         #score { font-size: 60px; font-weight: 900; color: #ffcc00; margin: 0; text-shadow: 0 0 40px rgba(255, 204, 0, 0.4); z-index: 10; margin-top: -40px; }
+        
+        /* Главная кнопка */
         #cat-wrapper { position: relative; z-index: 50; width: 85vw; max-width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; }
         #cat-image { width: 90%; height: auto; pointer-events: none; transition: filter 0.5s ease; }
+
+        /* Боковые кнопки */
         .side-btn { position: fixed; bottom: 25px; z-index: 100; width: 65px; height: 65px; cursor: pointer; transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center; background: none; border: none; }
         .side-btn img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
         .side-btn:active { transform: scale(0.9); }
+
         #settings-btn { left: 20px; font-size: 42px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         #shop-btn { right: 100px; }
         #skin-shop-btn { right: 20px; }
+
+        /* Меню */
         .overlay-menu { position: fixed; bottom: -100%; left: 0; width: 100%; height: 100vh; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(25px); border-top: 3px solid #ffcc00; border-radius: 30px 30px 0 0; z-index: 200; transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); padding: 10px 20px 40px; text-align: center; }
         .overlay-menu.open { transform: translateY(-75%); }
         .overlay-menu.full { transform: translateY(-100%); }
+
         .drag-handle { width: 60px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 10px auto 10px; cursor: ns-resize; }
         .close-btn-top { position: absolute; top: 25px; right: 20px; width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); z-index: 210; transition: background 0.2s; }
-        .close-btn-top:active { background: rgba(255, 0, 0, 0.5); transform: scale(0.9); }
-        .scroll-hint { font-size: 12px; color: #ffcc00; margin-bottom: 15px; transition: opacity 0.3s ease; animation: pulseHint 2s infinite; }
-        .scroll-hint.hidden { opacity: 0; pointer-events: none; }
-        .menu-content { height: calc(100% - 70px); overflow-y: auto; padding-bottom: 80px; scrollbar-width: none; cursor: grab; }
+        
+        .menu-content { height: calc(100% - 70px); overflow-y: auto; padding-bottom: 80px; scrollbar-width: none; }
         .menu-content::-webkit-scrollbar { display: none; }
+
         .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
-        .option-row:active { transform: scale(0.98); background: #252525; }
         .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; min-width: 80px; }
-        .tap-effect { position: fixed; color: #ffcc00; font-size: 48px; font-weight: 900; pointer-events: none; z-index: 999; text-shadow: 0 0 20px rgba(255, 204, 0, 0.8); animation: flyUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        /* Анимации */
+        .tap-effect { position: fixed; color: #ffcc00; font-size: 48px; font-weight: 900; pointer-events: none; z-index: 999; text-shadow: 0 0 20px rgba(255, 204, 0, 0.8); animation: flyUp 0.7s forwards; }
         @keyframes flyUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -180px) scale(1); opacity: 0; } }
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
-        @keyframes pulseHint { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div id="error-msg" style="display:none;"><h1>❌ ОШИБКА ID</h1></div>
+    <div id="error-msg" style="display:none; text-align:center; padding:50px;"><h1>❌ ОШИБКА: ОТКРОЙТЕ ЧЕРЕЗ ТЕЛЕГРАМ</h1></div>
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
 
     <div id="top-header">Тапай Котость!</div>
@@ -84,24 +110,27 @@
     <div id="skin-shop-menu" class="overlay-menu">
         <div class="close-btn-top" onclick="closeMenu('skin-shop-menu')">✕</div>
         <div class="drag-handle"></div>
-        <div class="scroll-hint">Тяни вверх для полного экрана</div>
         <div class="menu-content">
             <h2>Магазин скинов</h2>
             <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
                 <span style="color: #ffcc00;">БАЛАНС:</span> <span class="current-balance">0</span>
             </div>
+            
             <div class="option-row" onclick="buyOrSelect('skin0')">
                 <div style="display:flex; align-items:center;"><img src="image_0.png" width="40" style="margin-right:10px;"> Дефолт</div>
                 <div id="btn-skin0" class="buy-btn">ВЫБРАТЬ</div>
             </div>
+
             <div class="option-row" onclick="buyOrSelect('skin3')">
                 <div style="display:flex; align-items:center;"><img src="arhip.png" width="40" style="margin-right:10px;"> Архип (+1.5)</div>
                 <div id="btn-skin3" class="buy-btn">500</div>
             </div>
+
             <div class="option-row" onclick="buyOrSelect('skin1')">
                 <div style="display:flex; align-items:center;"><img src="skin1.png" width="40" style="margin-right:10px;"> Элитный (+2)</div>
                 <div id="btn-skin1" class="buy-btn">1,000</div>
             </div>
+
             <div class="option-row" onclick="buyOrSelect('skin2')">
                 <div style="display:flex; align-items:center;"><img src="skin2.png" width="40" style="margin-right:10px;"> Куки дино (+3)</div>
                 <div id="btn-skin2" class="buy-btn">5,000</div>
@@ -112,25 +141,16 @@
     <div id="shop-menu" class="overlay-menu">
         <div class="close-btn-top" onclick="closeMenu('shop-menu')">✕</div>
         <div class="drag-handle"></div>
-        <div class="scroll-hint">Тяни вверх для полного экрана</div>
-        <div class="menu-content">
-            <h2>Улучшения</h2>
-            <div class="option-row">Скоро...</div>
-        </div>
+        <div class="menu-content"><h2>Улучшения</h2><div class="option-row">Скоро...</div></div>
     </div>
 
     <div id="settings-menu" class="overlay-menu">
         <div class="close-btn-top" onclick="closeMenu('settings-menu')">✕</div>
         <div class="drag-handle"></div>
-        <div class="scroll-hint">Тяни вверх для полного экрана</div>
         <div class="menu-content">
             <h2>Настройки</h2>
-            <div class="option-row" onclick="toggleMusic()">
-                <span>🎵 Музыка</span> <span id="music-status">ВЫКЛ</span>
-            </div>
-            <div class="option-row" onclick="toggleCurrency()">
-                <span>🔄 Валюта</span> <span id="currency-status">Котость</span>
-            </div>
+            <div class="option-row" onclick="toggleMusic()"><span>🎵 Музыка</span> <span id="music-status">ВЫКЛ</span></div>
+            <div class="option-row" onclick="toggleCurrency()"><span>🔄 Валюта</span> <span id="currency-status">Котость</span></div>
         </div>
     </div>
 
@@ -168,43 +188,6 @@
             }
         });
 
-        let startY = 0, isDragging = false, currentActiveMenu = null;
-
-        function openMenu(id) {
-            currentActiveMenu = document.getElementById(id);
-            currentActiveMenu.classList.add('open');
-            currentActiveMenu.classList.remove('full');
-            const hint = currentActiveMenu.querySelector('.scroll-hint');
-            if(hint) hint.classList.remove('hidden');
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
-        function closeMenu(id) {
-            const menu = document.getElementById(id);
-            if (menu) menu.classList.remove('open', 'full');
-            currentActiveMenu = null;
-        }
-
-        const handleStart = (y) => { 
-            if (!currentActiveMenu) return;
-            startY = y; isDragging = true; 
-        };
-
-        const handleMove = (y) => {
-            if (!isDragging || !currentActiveMenu) return;
-            let diff = startY - y;
-            if (diff > 80) currentActiveMenu.classList.add('full');
-            if (diff < -120) closeMenu(currentActiveMenu.id);
-        };
-
-        window.addEventListener('touchstart', e => handleStart(e.touches[0].clientY));
-        window.addEventListener('touchmove', e => handleMove(e.touches[0].clientY));
-        window.addEventListener('mousedown', e => { 
-            if (e.target.closest('.drag-handle')) handleStart(e.clientY); 
-        });
-        window.addEventListener('mousemove', e => handleMove(e.clientY));
-        window.addEventListener('mouseup', () => isDragging = false);
-
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
             document.querySelectorAll('.current-balance').forEach(b => b.innerText = score.toLocaleString());
@@ -221,18 +204,8 @@
             document.getElementById('cat-image').style.filter = `drop-shadow(0 0 35px ${accentColor})`;
         }
 
-        function renderSettings() {
-            document.getElementById('music-status').innerText = musicActive ? "ВКЛ" : "ВЫКЛ";
-            document.getElementById('currency-status').innerText = isCookieMode ? "Куки" : "Котость";
-        }
-
         function renderShop() {
-            const skinsList = [
-                {id:'skin0', p:0}, 
-                {id:'skin3', p:500}, 
-                {id:'skin1', p:1000}, 
-                {id:'skin2', p:5000}
-            ];
+            const skinsList = [{id:'skin0', p:0}, {id:'skin3', p:500}, {id:'skin1', p:1000}, {id:'skin2', p:5000}];
             skinsList.forEach(s => {
                 const btn = document.getElementById('btn-' + s.id);
                 if (btn) {
@@ -262,20 +235,8 @@
             }
         }
 
-        function toggleMusic() {
-            musicActive = !musicActive;
-            const audio = document.getElementById('bg-music');
-            if (musicActive) audio.play().catch(()=>{}); else audio.pause();
-            userRef.update({ musicOn: musicActive });
-        }
-
-        function toggleCurrency() {
-            isCookieMode = !isCookieMode;
-            userRef.update({ isCookie: isCookieMode });
-        }
-
         function handleTap(x, y) {
-            if (currentActiveMenu) return;
+            if (document.querySelector('.overlay-menu.open')) return;
             
             let plus = 1;
             if (currentSkinId === 'skin1') plus = 2;
@@ -303,15 +264,31 @@
             setTimeout(() => el.remove(), 700);
         }
 
+        // Управление меню
+        let currentActiveMenu = null;
+        function openMenu(id) {
+            currentActiveMenu = document.getElementById(id);
+            currentActiveMenu.classList.add('open');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+        function closeMenu(id) {
+            document.getElementById(id).classList.remove('open', 'full');
+            currentActiveMenu = null;
+        }
+
+        // Переключатели
+        function toggleMusic() { musicActive = !musicActive; const audio = document.getElementById('bg-music'); if (musicActive) audio.play().catch(()=>{}); else audio.pause(); userRef.update({ musicOn: musicActive }); }
+        function toggleCurrency() { isCookieMode = !isCookieMode; userRef.update({ isCookie: isCookieMode }); }
+        function renderSettings() { document.getElementById('music-status').innerText = musicActive ? "ВКЛ" : "ВЫКЛ"; document.getElementById('currency-status').innerText = isCookieMode ? "Куки" : "Котость"; }
+
+        // Слушатели событий
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 handleTap(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
             }
         });
-        document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => {
-            handleTap(e.clientX, e.clientY);
-        });
+        document.getElementById('cat-wrapper').addEventListener('mousedown', (e) => handleTap(e.clientX, e.clientY));
     </script>
 </body>
 </html>
