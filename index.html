@@ -38,39 +38,56 @@
             border-radius: 30px 30px 0 0;
             z-index: 200; 
             transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); 
-            padding: 15px 30px 40px; 
-            text-align: center; 
+            padding: 10px 30px 40px; 
+            text-align: center;
         }
         
         .overlay-menu.open { transform: translateY(-75%); }
         .overlay-menu.full { transform: translateY(-100%); }
 
-        .drag-handle { width: 60px; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 0 auto 20px; cursor: ns-resize; }
+        .drag-handle { width: 60px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 5px auto 10px; cursor: ns-resize; }
+        .scroll-hint { font-size: 12px; color: #ffcc00; opacity: 0.6; margin-bottom: 15px; animation: pulseHint 2s infinite; }
+        @keyframes pulseHint { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
 
         .menu-content { 
-            height: calc(100% - 40px); 
+            height: calc(100% - 60px); 
             overflow-y: auto; 
-            padding-bottom: 50px;
+            padding-bottom: 80px;
+            scrollbar-width: none; /* Скрываем скроллбар */
         }
+        .menu-content::-webkit-scrollbar { display: none; }
 
         .option-row { background: #1a1a1a; border: 1px solid #333; color: white; padding: 18px; width: 100%; border-radius: 15px; margin-bottom: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
         .option-row:active { transform: scale(0.98); background: #252525; }
         
-        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; }
+        .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; min-width: 80px; }
         .close-btn { background: #ff4444; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-transform: uppercase; width: 100%; cursor: pointer; }
+
+        /* АНИМАЦИЯ ТАПА */
+        .tap-effect { 
+            position: fixed; 
+            color: #ffcc00; 
+            font-size: 48px; 
+            font-weight: 900; 
+            pointer-events: none; 
+            z-index: 999; 
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
+            animation: flyUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+        }
+        @keyframes flyUp { 
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 
+            20% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -180px) scale(1); opacity: 0; } 
+        }
 
         .tapped { animation: clickJump 0.1s ease-out; }
         @keyframes clickJump { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         @keyframes auraExplosion { 0% { transform: scale(0.95); opacity: 0.4; } 12% { transform: scale(1.15); opacity: 0.8; } 100% { transform: scale(1); opacity: 0.5; } }
-        
-        .tap-effect { position: fixed; color: #ffcc00; font-size: 42px; font-weight: 900; pointer-events: none; z-index: 150; animation: plusOne 0.6s ease-out forwards; }
-        @keyframes plusOne { 0% { transform: translateY(0) opacity: 1; } 100% { transform: translateY(-150px) opacity: 0; } }
-        #error-msg { display: none; text-align: center; color: #ff4444; position: fixed; width: 100%; height: 100%; background: #050505; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <div id="error-msg"><h1>❌ ОШИБКА ID</h1></div>
+    <div id="error-msg" style="display:none;"><h1>❌ ОШИБКА ID</h1></div>
     <audio id="bg-music" loop><source src="song.mp3" type="audio/mpeg"></audio>
 
     <div id="top-header">Тапай Котость!</div>
@@ -87,6 +104,7 @@
 
     <div id="skin-shop-menu" class="overlay-menu">
         <div class="drag-handle"></div>
+        <div class="scroll-hint">Тяни вверх, чтобы раскрыть на весь экран</div>
         <div class="menu-content">
             <h2>Магазин скинов</h2>
             <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-bottom: 20px;">
@@ -110,6 +128,7 @@
 
     <div id="shop-menu" class="overlay-menu">
         <div class="drag-handle"></div>
+        <div class="scroll-hint">Тяни вверх, чтобы раскрыть</div>
         <div class="menu-content">
             <h2>Улучшения</h2>
             <div class="option-row">Скоро...</div>
@@ -119,6 +138,7 @@
 
     <div id="settings-menu" class="overlay-menu">
         <div class="drag-handle"></div>
+        <div class="scroll-hint">Тяни вверх, чтобы раскрыть</div>
         <div class="menu-content">
             <h2>Настройки</h2>
             <div class="option-row" onclick="toggleMusic()">
@@ -165,10 +185,9 @@
             }
         });
 
-        // ЛОГИКА ТЯНУЧЕГО МЕНЮ (ПК + ТЕЛЕФОН)
-        let startY = 0;
-        let isDragging = false;
-        let currentActiveMenu = null;
+        // СКРОЛЛ И ТЯНУЧКА (ПК + ТЕЛЕФОН)
+        let startY = 0, currentY = 0, isDragging = false, currentActiveMenu = null;
+        let menuScrollStart = 0, menuIsScrolling = false;
 
         function openMenu(id) {
             currentActiveMenu = document.getElementById(id);
@@ -183,42 +202,36 @@
             currentActiveMenu = null;
         }
 
-        function handleDragStart(y) {
-            if (!currentActiveMenu || currentActiveMenu.querySelector('.menu-content').scrollTop > 0) return;
-            startY = y;
-            isDragging = true;
-        }
+        // Логика Drag-to-Scroll для ПК (скролл мышкой)
+        document.querySelectorAll('.menu-content').forEach(content => {
+            let isDown = false, startScrollTop, startMouseY;
+            content.addEventListener('mousedown', (e) => {
+                isDown = true;
+                startMouseY = e.pageY;
+                startScrollTop = content.scrollTop;
+            });
+            window.addEventListener('mouseup', () => isDown = false);
+            window.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const walk = (e.pageY - startMouseY) * 1.5;
+                content.scrollTop = startScrollTop - walk;
+            });
+        });
 
-        function handleDragMove(y) {
+        // Логика раскрытия шторки
+        const handleStart = (y) => { startY = y; isDragging = true; };
+        const handleMove = (y) => {
             if (!isDragging || !currentActiveMenu) return;
             let diff = startY - y;
             if (diff > 80) currentActiveMenu.classList.add('full');
-            if (diff < -100) closeMenu(currentActiveMenu.id);
-        }
+            if (diff < -120) closeMenu(currentActiveMenu.id);
+        };
 
-        // События для телефона
-        document.querySelectorAll('.overlay-menu').forEach(menu => {
-            menu.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
-            menu.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
-            menu.addEventListener('touchend', () => isDragging = false);
-        });
-
-        // События для мыши (ПК)
-        document.querySelectorAll('.drag-handle').forEach(handle => {
-            handle.addEventListener('mousedown', e => handleDragStart(e.clientY));
-        });
-
-        window.addEventListener('mousemove', e => handleDragMove(e.clientY));
+        window.addEventListener('touchstart', e => handleStart(e.touches[0].clientY));
+        window.addEventListener('touchmove', e => handleMove(e.touches[0].clientY));
+        window.addEventListener('mousedown', e => { if (e.target.classList.contains('drag-handle')) handleStart(e.clientY); });
+        window.addEventListener('mousemove', e => handleMove(e.clientY));
         window.addEventListener('mouseup', () => isDragging = false);
-
-        // Колесико мыши
-        document.querySelectorAll('.menu-content').forEach(content => {
-            content.addEventListener('wheel', (e) => {
-                if (e.deltaY < -40 && content.scrollTop <= 0 && currentActiveMenu) {
-                    currentActiveMenu.classList.add('full');
-                }
-            });
-        });
 
         function updateVisuals() {
             document.getElementById('score').innerText = score.toLocaleString();
@@ -262,7 +275,8 @@
                     score -= prices[skinId];
                     ownedSkins[skinId] = true;
                     userRef.update({ score: score, ownedSkins: ownedSkins, currentSkinId: skinId });
-                }
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else { tg.HapticFeedback.notificationOccurred('error'); }
             }
         }
 
@@ -284,10 +298,12 @@
             score += plus;
             updateVisuals();
             userRef.update({ score: score });
+            
             const tapper = document.getElementById('cat-wrapper');
             tapper.classList.remove('tapped');
             void tapper.offsetWidth;
             tapper.classList.add('tapped');
+            
             tg.HapticFeedback.impactOccurred('light');
             spawnPlusOne(x, y, plus);
         }
@@ -296,9 +312,10 @@
             const el = document.createElement('div');
             el.className = 'tap-effect';
             el.innerText = '+' + val;
-            el.style.left = `${x - 20}px`; el.style.top = `${y - 40}px`;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
             document.body.appendChild(el);
-            setTimeout(() => el.remove(), 600);
+            setTimeout(() => el.remove(), 700);
         }
 
         document.getElementById('cat-wrapper').addEventListener('touchstart', (e) => {
