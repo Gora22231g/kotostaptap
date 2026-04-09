@@ -32,7 +32,7 @@
             background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(25px); 
             border-top: 3px solid #ffcc00; border-radius: 30px 30px 0 0;
             z-index: 200; transition: transform 0.4s cubic-bezier(0.17, 0.84, 0.44, 1); 
-            padding: 10px 30px 40px; text-align: center;
+            padding: 10px 20px 40px; text-align: center;
         }
         
         .overlay-menu.open { transform: translateY(-75%); }
@@ -40,10 +40,19 @@
 
         .drag-handle { width: 60px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 4px; margin: 10px auto 10px; cursor: ns-resize; }
         
+        /* НОВАЯ КНОПКА ЗАКРЫТЬ СПРАВА */
+        .close-btn-top {
+            position: absolute; top: 25px; right: 20px;
+            width: 35px; height: 35px; background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+            z-index: 210; transition: background 0.2s;
+        }
+        .close-btn-top:active { background: rgba(255, 0, 0, 0.5); transform: scale(0.9); }
+
         .scroll-hint { 
             font-size: 12px; color: #ffcc00; margin-bottom: 15px; 
-            transition: opacity 0.3s ease;
-            animation: pulseHint 2s infinite; 
+            transition: opacity 0.3s ease; animation: pulseHint 2s infinite; 
         }
         .scroll-hint.hidden { opacity: 0; pointer-events: none; }
         @keyframes pulseHint { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
@@ -59,7 +68,6 @@
         .option-row:active { transform: scale(0.98); background: #252525; }
         
         .buy-btn { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; min-width: 80px; }
-        .close-btn { background: #ff4444; color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-transform: uppercase; width: 100%; cursor: pointer; }
 
         .tap-effect { 
             position: fixed; color: #ffcc00; font-size: 48px; font-weight: 900; 
@@ -95,6 +103,7 @@
     <div id="skin-shop-btn" class="side-btn" onclick="openMenu('skin-shop-menu')"><img src="skinshop.png"></div>
 
     <div id="skin-shop-menu" class="overlay-menu">
+        <div class="close-btn-top" onclick="closeMenu('skin-shop-menu')">✕</div>
         <div class="drag-handle"></div>
         <div class="scroll-hint">Тяни вверх для полного экрана</div>
         <div class="menu-content">
@@ -114,21 +123,21 @@
                 <div style="display:flex; align-items:center;"><img src="skin2.png" width="40" style="margin-right:10px;"> Куки дино (+3)</div>
                 <div id="btn-skin2" class="buy-btn">5,000</div>
             </div>
-            <button class="close-btn" onclick="closeMenu('skin-shop-menu')">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="shop-menu" class="overlay-menu">
+        <div class="close-btn-top" onclick="closeMenu('shop-menu')">✕</div>
         <div class="drag-handle"></div>
         <div class="scroll-hint">Тяни вверх для полного экрана</div>
         <div class="menu-content">
             <h2>Улучшения</h2>
             <div class="option-row">Скоро...</div>
-            <button class="close-btn" onclick="closeMenu('shop-menu')">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="settings-menu" class="overlay-menu">
+        <div class="close-btn-top" onclick="closeMenu('settings-menu')">✕</div>
         <div class="drag-handle"></div>
         <div class="scroll-hint">Тяни вверх для полного экрана</div>
         <div class="menu-content">
@@ -139,7 +148,6 @@
             <div class="option-row" onclick="toggleCurrency()">
                 <span>🔄 Валюта</span> <span id="currency-status">Котость</span>
             </div>
-            <button class="close-btn" onclick="closeMenu('settings-menu')">ЗАКРЫТЬ</button>
         </div>
     </div>
 
@@ -175,7 +183,6 @@
             }
         });
 
-        // ЛОГИКА ТЯНУЧКИ И СКРОЛЛА
         let startY = 0, isDragging = false, currentActiveMenu = null;
 
         function openMenu(id) {
@@ -211,18 +218,16 @@
         window.addEventListener('touchstart', e => handleStart(e.touches[0].clientY));
         window.addEventListener('touchmove', e => handleMove(e.touches[0].clientY));
         window.addEventListener('mousedown', e => { 
-            if (e.target.closest('.drag-handle') || e.target.closest('.menu-content')) handleStart(e.clientY); 
+            if (e.target.closest('.drag-handle') || (e.target.closest('.menu-content') && !e.target.closest('.buy-btn') && !e.target.closest('.option-row'))) handleStart(e.clientY); 
         });
         window.addEventListener('mousemove', e => handleMove(e.clientY));
         window.addEventListener('mouseup', () => isDragging = false);
 
-        // Мышиный скролл (Drag-to-Scroll)
         document.querySelectorAll('.menu-content').forEach(content => {
             let isDown = false, startScrollTop, startMouseY;
             content.addEventListener('mousedown', (e) => {
-                isDown = true;
-                startMouseY = e.pageY;
-                startScrollTop = content.scrollTop;
+                if(e.target.closest('.option-row') || e.target.closest('.buy-btn')) return;
+                isDown = true; startMouseY = e.pageY; startScrollTop = content.scrollTop;
             });
             window.addEventListener('mousemove', (e) => {
                 if (!isDown) return;
